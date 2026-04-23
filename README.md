@@ -1,4 +1,4 @@
-# learn_goland
+# Longread_go
 
 Go lecture notes from the Central University backend course. 11 longreads covering the language from basics to HTTP services.
 
