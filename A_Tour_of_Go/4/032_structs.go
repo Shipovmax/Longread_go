@@ -2,11 +2,11 @@ package atourofgo
 
 import "fmt"
 
-type Vertex struct {
+type Vertexpo struct {
 	X int
 	Y int
 }
 
 func structs() {
-	fmt.Println(Vertex{1, 2})
+	fmt.Println(Vertexpo{1, 2})
 }
