@@ -1,0 +1,23 @@
+package atourofgo
+
+import "fmt"
+
+// IPAddr — пользовательский тип на основе массива из 4 байт
+type IPAddr [4]byte
+
+// String() — реализация интерфейса fmt.Stringer
+// Теперь %v будет выводить IP-адрес в привычном формате
+func (ip IPAddr) String() string {
+	return fmt.Sprintf("%v.%v.%v.%v", ip[0], ip[1], ip[2], ip[3])
+}
+
+func exercise_stringers() {
+	hosts := map[string]IPAddr{
+		"loopback":  {127, 0, 0, 1},
+		"googleDNS": {8, 8, 8, 8},
+	}
+
+	for name, ip := range hosts {
+		fmt.Printf("%v: %v\n", name, ip)
+	}
+}
