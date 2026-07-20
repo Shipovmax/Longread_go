@@ -8,7 +8,7 @@ import (
 
 func readers() {
 	r := strings.NewReader("Hello, Reader!") // создаёт Reader из строки
-	b := make([]byte, 8)	// буфер на 8 байт для чтения
+	b := make([]byte, 8)                     // буфер на 8 байт для чтения
 
 	for {
 		n, err := r.Read(b) // читаем данные в буфер, n — сколько байт прочитано
