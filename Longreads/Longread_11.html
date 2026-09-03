@@ -1,0 +1,804 @@
+<title>Протокол без памяти</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+  .meta-row .final{color:var(--accent-2);}
+  .meta-row .final b{color:var(--accent-2);}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .compare-code{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:.3rem;}
+  @media (max-width:700px){.compare-code{grid-template-columns:1fr;}}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+  table.data-table td.yes{color:var(--accent); font-weight:600;}
+  table.data-table td.no{color:var(--text-faint);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item.optional{opacity:.72; border-style:dashed;}
+  .diff-item.optional .diff-num{color:var(--text-faint);}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+  .colophon b{color:var(--accent);}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 11 из 11</span>
+    <h1 class="title">Протокол без памяти<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Как устроены HTTP-запрос и ответ, что на самом деле требует REST, и как за пару экранов кода <code>net/http</code> поднимает сервер, клиент и цепочку middleware.</p>
+    <div class="meta-row">
+      <span><b>~24 мин</b> чтения</span>
+      <span><b>6</b> разделов</span>
+      <span class="final"><b>финал</b> курса</span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#http"><span class="n">01</span>HTTP-протокол</a></li>
+        <li><a href="#rest"><span class="n">02</span>REST</a></li>
+        <li><a href="#servers"><span class="n">03</span>HTTP-серверы в Go</a></li>
+        <li><a href="#routing"><span class="n">04</span>Маршрутизация</a></li>
+        <li><a href="#clients"><span class="n">05</span>HTTP-клиенты</a></li>
+        <li><a href="#middlewares"><span class="n">06</span>Middlewares</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#http"><span class="n">01</span>HTTP-протокол</a></li>
+      <li><a href="#rest"><span class="n">02</span>REST</a></li>
+      <li><a href="#servers"><span class="n">03</span>HTTP-серверы в Go</a></li>
+      <li><a href="#routing"><span class="n">04</span>Маршрутизация</a></li>
+      <li><a href="#clients"><span class="n">05</span>HTTP-клиенты</a></li>
+      <li><a href="#middlewares"><span class="n">06</span>Middlewares</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 HTTP -->
+    <section class="section" id="http">
+      <div class="section__head"><span class="section__num">01</span><h2>HTTP-протокол</h2></div>
+      <p>Как только сервис выходит за границы своего процесса, начинается сетевое взаимодействие — а для него нужен протокол: набор правил и договорённостей о формате запросов и ответов. Здесь мы всегда имеем дело с <strong>клиент-серверной архитектурой</strong>: клиент отправляет запрос, желая получить или изменить данные, сервер его принимает, обрабатывает и отвечает. Практически любой сервис бывает и клиентом, и сервером одновременно — а правила их общения в нашем случае задаёт <strong>HTTP</strong>.</p>
+
+      <div class="diagram">
+        <pre class="mermaid">
+sequenceDiagram
+  participant C as Клиент
+  participant S as Сервер
+  C->>S: HTTP-запрос (метод, URI, заголовки, тело)
+  Note over S: обработка
+  S-->>C: HTTP-ответ (код, заголовки, тело)
+        </pre>
+        <p class="diagram-caption">Базовый цикл — клиент инициирует, сервер отвечает; протокол сам по себе не помнит, что было раньше</p>
+      </div>
+
+      <p class="prose-muted">HTTP (<em>HyperText Transfer Protocol</em>) относится к прикладному уровню и в OSI, и в TCP/IP — то есть отвечает именно за передачу данных в сети. Обе модели полезно понимать в будущем, но здесь это не главное.</p>
+      <div class="chips">
+        <span class="chip">передача страниц и файлов</span>
+        <span class="chip">обработка форм</span>
+        <span class="chip">сессии и авторизация</span>
+        <span class="chip">JSON / XML / бинарные данные</span>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// протокол без памяти</span>
+        <p>Каждый запрос независим от остальных — сервер не помнит прошлые запросы клиента. Cookie и данные сессии позволяют сымитировать состояние, но живут они, как правило, только в рамках одного соединения.</p>
+      </div>
+      <p class="prose-muted">Сообщения передаются простым текстом в ASCII/UTF-8 и называются «запрос» и «ответ».</p>
+
+      <h3>HTTP-запрос</h3>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">запрос</span><span class="code-block__lang">http</span></div>
+        <pre class="code-bash"><code>POST /api/users/123 HTTP/1.1
+Host: example.com
+User-Agent: Mozilla/5.0
+Accept: application/json
+Authorization: Bearer abc123
+
+{"key": 123}</code></pre>
+      </div>
+      <dl class="glossary">
+        <div><dt>стартовая строка</dt><dd>метод, эндпоинт (точнее — <strong>URI</strong>, компактная строка-идентификатор ресурса) и версия протокола.</dd></div>
+        <div><dt>заголовки</dt><dd>метаданные запроса в виде ключ-значение — техническая информация, задающая контекст.</dd></div>
+        <div><dt>тело запроса</dt><dd>данные для POST/PUT; у GET тела по конвенции не бывает вовсе.</dd></div>
+      </dl>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Метод</th><th>Что означает</th><th>Идемпотентен</th></tr></thead>
+          <tbody>
+            <tr><td class="type">GET</td><td>получить данные/ресурс</td><td class="yes">да</td></tr>
+            <tr><td class="type">POST</td><td>создать данные на сервере</td><td class="no">нет</td></tr>
+            <tr><td class="type">PUT</td><td>обновить/заменить ресурс</td><td class="yes">да</td></tr>
+            <tr><td class="type">DELETE</td><td>удалить ресурс</td><td class="yes">да</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted"><strong>Идемпотентность</strong> — повторное выполнение операции даёт тот же результат, что и однократное. Из четырёх методов только <code>GET</code> ничего не меняет по своей природе — остальные так или иначе трогают состояние (полный список <a href="https://developer.mozilla.org/ru/docs/Web/HTTP/Reference/Methods">методов</a> заметно шире).</p>
+
+      <dl class="glossary">
+        <div><dt>path-параметр</dt><dd>обязательная часть пути: в <code>/api/users/{userID}</code> число <code>123</code> — идентификатор конкретного ресурса.</dd></div>
+        <div><dt>query-параметр</dt><dd>необязательный, после <code>?</code>: <code>/api/users/{userID}?offset=20&amp;limit=2</code>, разделяются <code>&amp;</code>. Отсутствие параметра нужно обрабатывать через значения по умолчанию.</dd></div>
+      </dl>
+
+      <p>Заголовки запроса — контекст в чистом виде:</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Заголовок</th><th>Назначение</th></tr></thead>
+          <tbody>
+            <tr><td class="type">Authorization / Cookie</td><td>аутентификация и определение пользователя</td></tr>
+            <tr><td class="type">Host</td><td>к какому ресурсу идёт обращение</td></tr>
+            <tr><td class="type">Accept</td><td>ожидаемый тип и кодировка содержимого</td></tr>
+            <tr><td class="type">User-Agent / Accept-Language</td><td>браузер, ОС, язык клиента</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted">Полный список — в <a href="https://developer.mozilla.org/ru/docs/Web/HTTP/Reference/Headers">справочнике MDN</a>.</p>
+
+      <h3>HTTP-ответ</h3>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">ответ</span><span class="code-block__lang">http</span></div>
+        <pre class="code-bash"><code>HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 1234
+Date: Mon, 23 Oct 2023 12:00:00 GMT
+Server: nginx/1.18.0
+
+{
+  "id": 123,
+  "name": "John Doe",
+  "email": "john@example.com"
+}</code></pre>
+      </div>
+      <p class="prose-muted">Стартовая строка теперь несёт версию протокола, код и статус ответа — например, <code>404 Not Found</code> или <code>500 Internal Error</code>. Заголовки и тело выполняют ту же роль, что и в запросе.</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Группа</th><th>Значение</th></tr></thead>
+          <tbody>
+            <tr><td class="type">2xx</td><td>успешные ответы</td></tr>
+            <tr><td class="type">3xx</td><td>перенаправление</td></tr>
+            <tr><td class="type">4xx</td><td>ошибка клиента</td></tr>
+            <tr><td class="type">5xx</td><td>ошибка сервера</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted">Подробности — на <a href="https://developer.mozilla.org/ru/docs/Web/HTTP/Reference/Status">MDN</a>. Ради интереса — загляни, что скрывается за кодом <code>418</code>.</p>
+
+      <h3>Версии HTTP-протокола</h3>
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  A["0.9
+1991
+только GET,
+только HTML"] --> B["1.0
+1996
+POST, статусы,
+заголовки"] --> C["1.1
+1997
+keep-alive,
+самая массовая"] --> D["2
+2015
+мультиплексирование,
+основа gRPC"] --> E["3
+2022
+поверх QUIC/UDP"]
+        </pre>
+        <p class="diagram-caption">За 30+ лет — всего пять версий; версии 2 и 3 бинарные и не читаются как простой текст</p>
+      </div>
+    </section>
+
+    <!-- 02 REST -->
+    <section class="section" id="rest">
+      <div class="section__head"><span class="section__num">02</span><h2>REST</h2></div>
+      <p>Контракт общения клиента и сервера логично держать на стороне сервера — клиентов может быть множество, и именно сервер несёт ответственность за удобное API. <strong>REST</strong> — не протокол, а архитектурный стиль: набор принципов для построения веб-систем. Путать REST с протоколом — классическая ошибка на собеседованиях.</p>
+
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Клиент-серверная архитектура.</strong> Разделение обязанностей: клиент — потребление API, сервер — данные и эндпоинты, развиваются независимо.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Отсутствие состояния (stateless).</strong> Сервер не хранит сессию клиента — каждый запрос самодостаточен.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Кеширование.</strong> Ответ явно помечен как кешируемый или нет — чтобы клиент мог переиспользовать данные.</p></div>
+        <div class="diff-item"><span class="diff-num">4</span><p><strong>Единообразие интерфейса.</strong> Один унифицированный способ общения — через HTTP-методы, понятие ресурса и URL.</p></div>
+        <div class="diff-item"><span class="diff-num">5</span><p><strong>Многослойная система.</strong> Балансировщик, обработчик и другие уровни не видят дальше соседнего.</p></div>
+        <div class="diff-item optional"><span class="diff-num">6</span><p><strong>Код по требованию</strong> (необязательно). Сервер может отдать клиенту исполняемый код — например, скрипт.</p></div>
+      </div>
+      <p class="prose-muted">Первые пять пунктов выполнены — систему можно называть соответствующей REST, или <code>RESTful</code>.</p>
+
+      <p>REST API реализует четыре операции <strong>CRUD</strong> (create, read, update, delete) ровно через уже знакомые методы: <code>GET</code> читает, <code>POST</code> создаёт, <code>PUT</code> обновляет/заменяет, <code>DELETE</code> удаляет.</p>
+      <p class="prose-muted">Всё в REST вращается вокруг <strong>ресурса</strong> — любой сущности с уникальным идентификатором-URI: документ, товар, пользователь. Клиент работает не с самим ресурсом напрямую, а с его представлением — JSON, XML, бинарные данные. <code>/users/123</code> отдаёт один ресурс, <code>/users</code> — массив ресурсов.</p>
+
+      <div class="compare-code">
+        <div class="code-block">
+          <div class="code-block__bar"><span class="code-block__file">хорошо: ресурсно-ориентированные URI</span></div>
+          <pre class="code-bash"><code>GET    /api/users          # все пользователи
+GET    /api/users/123      # пользователь 123
+POST   /api/users          # создать пользователя
+PUT    /api/users/123      # обновить пользователя 123
+DELETE /api/users/123      # удалить пользователя 123
+GET    /api/users/123/orders  # заказы пользователя 123</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block__bar"><span class="code-block__file" style="color:var(--accent-2)">плохо: глаголы в URI</span></div>
+          <pre class="code-bash"><code>GET    /api/getUsers        # неправильно!
+POST   /api/createUser      # неправильно!
+PUT    /api/updateUser/123  # неправильно!</code></pre>
+        </div>
+      </div>
+      <p class="prose-muted">REST — не строгий стандарт, а философия. Но в индустрии ей принято следовать.</p>
+    </section>
+
+    <!-- 03 Серверы -->
+    <section class="section" id="servers">
+      <div class="section__head"><span class="section__num">03</span><h2>HTTP-серверы в Go</h2></div>
+      <p>Всё нужное для сервера уже есть под капотом языка — пакет <code>net/http</code>. Минимальный сервер укладывается в десяток строк:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func weatherHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Добро пожаловать в сервис погоды!")
+}
+
+func main() {
+	http.HandleFunc("/weather", weatherHandler)
+	fmt.Println("Сервер запущен на порту 8080...")
+
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		fmt.Println("Ошибка запуска сервера:", err)
+	}
+}</code></pre>
+      </div>
+      <p class="prose-muted"><strong>Обработчик</strong> (handler) — объект с методом <code>ServeHTTP(w http.ResponseWriter, r *http.Request)</code>, вызываемым на каждый входящий запрос. <code>http.HandleFunc</code> сам оборачивает обычную функцию в этот интерфейс. <code>nil</code> вторым аргументом <code>ListenAndServe</code> означает «взять глобальный <code>http.DefaultServeMux</code>» — маршрутизатор по умолчанию, в который мы и зарегистрировали обработчик.</p>
+      <dl class="glossary">
+        <div><dt>http.ResponseWriter</dt><dd>интерфейс для отправки ответа — через него пишутся данные и заголовки.</dd></div>
+        <div><dt>*http.Request</dt><dd>вся информация о запросе: URL, метод, тело.</dd></div>
+      </dl>
+
+      <p>Когда нужен контроль над параметрами сервера — создаём его сами:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func handler(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	case "/":
+		fmt.Fprintln(w, "главная")
+	case "/about":
+		fmt.Fprintln(w, "о проекте")
+	default:
+		http.NotFound(w, r)
+	}
+}
+
+func main() {
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      http.HandlerFunc(handler),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// разница в одной букве</span>
+        <p><code>http.HandleFunc</code> — регистрирует маршрут на глобальном <code>DefaultServeMux</code>. <code>http.HandlerFunc</code> — конкретный тип-обёртка (<code>func(w, r)</code> с методом <code>ServeHTTP</code>), превращающий обычную функцию в хендлер. Первая — «повесь на URL», вторая — «сделай хендлером».</p>
+      </div>
+
+      <p class="prose-muted">Можно уйти и глубже, приняв голый <code>net.Listener</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>ln, err := net.Listen("tcp", ":8080")
+if err != nil {
+	log.Fatal(err)
+}
+
+srv := &http.Server{Handler: http.HandlerFunc(handler)}
+log.Fatal(srv.Serve(ln))</code></pre>
+      </div>
+      <p>А логику удобно собирать в структуру, реализующую <code>ServeHTTP</code> самостоятельно:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type App struct{}
+
+func (a *App) home(w http.ResponseWriter, r *http.Request)  { fmt.Fprintln(w, "главная") }
+func (a *App) about(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "о проекте") }
+
+func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	case "/":
+		a.home(w, r)
+	case "/about":
+		a.about(w, r)
+	default:
+		http.NotFound(w, r)
+	}
+}
+
+func main() {
+	app := &App{}
+	srv := &http.Server{Addr: ":8080", Handler: app}
+	log.Fatal(srv.ListenAndServe())
+}</code></pre>
+      </div>
+
+      <h3>Разбор запросов к серверу</h3>
+      <dl class="glossary">
+        <div><dt>r.Method</dt><dd>строка метода — GET, POST и так далее.</dd></div>
+        <div><dt>r.URL.Path / r.URL.Query()</dt><dd>путь запроса и его query-параметры — <code>r.URL.Query().Get("done")</code> вернёт строку даже для булевых значений.</dd></div>
+        <div><dt>r.Header</dt><dd><code>map[string][]string</code> — конкретный заголовок берётся через <code>r.Header.Get(...)</code>.</dd></div>
+        <div><dt>r.Body</dt><dd><code>io.ReadCloser</code> — читается только один раз; после чтения (или если оно не планируется) стоит закрыть через <code>defer r.Body.Close()</code>.</dd></div>
+      </dl>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func weatherHandler(w http.ResponseWriter, r *http.Request) {
+	city := r.URL.Query().Get("city") // ?city=...
+	if city == "" {
+		http.Error(w, "Не указан город", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "Запрошена погода для города: %s", city)
+}</code></pre>
+      </div>
+      <p class="prose-muted"><code>http.Error(w, msg, code)</code> одной строкой ставит и статус, и тело с сообщением об ошибке.</p>
+      <div class="callout callout-note">
+        <span class="callout-tag">// начиная с недавних версий Go</span>
+        <p>Path-параметры теперь можно объявлять прямо в шаблоне маршрута, вместе с методом:</p>
+        <pre class="code-go" style="background:transparent;padding:0;margin-top:.3rem;"><code>http.HandleFunc("GET /users/{id}", func(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "missing id", http.StatusBadRequest)
+		return
+	}
+})</code></pre>
+      </div>
+      <p>А чтение тела POST-запроса обычно выглядит так:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type createUserReq struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+func createUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	defer r.Body.Close()
+
+	var req createUserReq
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields() // Опционально: лишние поля в JSON → ошибка
+
+	if err := dec.Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"ok":    "true",
+		"saved": req.Name,
+	})
+}</code></pre>
+      </div>
+      <p class="prose-muted">Теги структуры снова делают её удобным контейнером для JSON, а <code>defer</code> гарантирует, что соединение освободится и вернётся в пул.</p>
+    </section>
+
+    <!-- 04 Маршрутизация -->
+    <section class="section" id="routing">
+      <div class="section__head"><span class="section__num">04</span><h2>Маршрутизация запросов</h2></div>
+      <p>С ростом числа маршрутов глобальные <code>http.HandleFunc</code> становятся неудобны — особенно если нужно несколько групп маршрутов или серверов. Маршрутизатор по умолчанию в Go — тип <code>*http.ServeMux</code>, сам реализующий <code>http.Handler</code>. Всё, что мы делали через <code>http.HandleFunc</code>, — это работа с его глобальным экземпляром. Можно завести и собственный:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>mux := http.NewServeMux()
+
+mux.HandleFunc("/tasks", tasksHandler)         // Список задач
+mux.HandleFunc("/tasks/add", addTaskHandler)   // Создание новой задачи
+mux.HandleFunc("/tasks/", taskNotFoundHandler) // Обработчик по умолчанию для подмаршрутов
+
+http.ListenAndServe(":8080", mux)</code></pre>
+      </div>
+      <p class="prose-muted">Правила сопоставления путей у <code>ServeMux</code>:</p>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p>Побеждает самое длинное совпадение — <code>/tasks/add</code> пойдёт именно в <code>addTaskHandler</code>, а не в обработчик <code>/tasks</code>.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p>Маршрут с завершающим слешем (<code>/tasks/</code>) работает как префикс для всех более длинных путей, не попавших под более точные маршруты — удобно для «не найдено».</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><code>/</code> — обработчик по умолчанию, если ничего конкретнее не подошло.</p></div>
+      </div>
+      <p class="prose-muted">Маршрутизацию удобно вынести в отдельную функцию <code>setupRoutes()</code>. Несколько разных <code>ServeMux</code> тоже допустимы — например, один под API, другой под статику, — но обычно хватает одного.</p>
+    </section>
+
+    <!-- 05 Клиенты -->
+    <section class="section" id="clients">
+      <div class="section__head"><span class="section__num">05</span><h2>HTTP-клиенты на Go</h2></div>
+      <p>Сервис нередко сам выступает клиентом — обращаясь к внешнему API или соседнему микросервису. Клиентские функции лежат там же, в <code>net/http</code>: высокоуровневые <code>http.Get</code>/<code>http.Post</code>, либо ручная сборка через <code>http.NewRequest</code> + <code>Client.Do</code>.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func getWeather(city string) (float64, error) {
+	coords, exists := cityCoordinates[city]
+	if !exists {
+		return 0, fmt.Errorf("город не найден")
+	}
+
+	baseURL, err := url.Parse("https://api.open-meteo.com/v1/forecast")
+	if err != nil {
+		return 0, err
+	}
+
+	q := url.Values{}
+	q.Set("latitude", fmt.Sprintf("%f", coords.Lat))
+	q.Set("longitude", fmt.Sprintf("%f", coords.Long))
+	q.Set("current_weather", "true")
+	baseURL.RawQuery = q.Encode()
+
+	resp, err := http.Get(baseURL.String())
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	var data WeatherResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return 0, err
+	}
+	return data.CurrentWeather.Temperature, nil
+}</code></pre>
+      </div>
+
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><code>http.Get</code> возвращает ошибку, только если запрос не выполнился вообще (сеть, DNS, тайм-аут). Ответ с кодом 404 или 500 — это не <code>err</code>, а нормальный <code>*http.Response</code> с нужным <code>StatusCode</code>, который стоит проверять отдельно.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p>Всегда закрывай <code>resp.Body</code> через <code>defer</code> сразу после проверки ошибки — иначе соединение зависает и не возвращается в пул.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p>Читать тело можно через <code>io.ReadAll</code> или сразу декодировать: <code>json.NewDecoder(resp.Body).Decode(&amp;obj)</code>.</p></div>
+        <div class="diff-item"><span class="diff-num">4</span><p>Для гибкости — ручная сборка запроса с нужными заголовками через <code>http.NewRequest</code> + <code>http.DefaultClient.Do</code> (или свой <code>http.Client</code> с тайм-аутами и прокси).</p></div>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>req, _ := http.NewRequest("PUT", "http://example.com/resource/42", bodyReader)
+req.Header.Set("Authorization", "Bearer TOKEN")
+resp, err := http.DefaultClient.Do(req)</code></pre>
+      </div>
+      <p class="prose-muted"><code>http.DefaultClient</code> — это просто готовый <code>&amp;http.Client{}</code>. Свой имеет смысл заводить, когда нужны собственные тайм-ауты или транспорт.</p>
+    </section>
+
+    <!-- 06 Middlewares -->
+    <section class="section" id="middlewares">
+      <div class="section__head"><span class="section__num">06</span><h2>Middlewares</h2></div>
+      <p><strong>Middleware</strong> — код, выполняемый до или после основного обработчика: логирование, авторизация, единообразная обработка ошибок, сжатие ответа. В стандартной библиотеке отдельного типа под это нет — но обработчики и так интерфейсы и функции, так что реализовать middleware легко самому: функция принимает один <code>http.Handler</code> и возвращает другой, оборачивающий исходную логику.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("=> %s %s\n", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r) // Передаём управление дальше по цепочке
+		fmt.Println("<= отправлен ответ клиенту")
+	})
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>mux := http.NewServeMux()
+// ... регистрация маршрутов ...
+loggedMux := loggingMiddleware(mux)
+http.ListenAndServe(":8080", loggedMux)</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  REQ["запрос"] --> A["withRequestID"] --> B["withLogging"] --> H["hello()"] --> B2["withLogging
+хвост"] --> A2["withRequestID
+хвост"] --> RES["ответ"]
+        </pre>
+        <p class="diagram-caption">Middleware работает слоями «луковицы»: внешний оборачивающий отрабатывает первым на входе и последним на выходе</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func withRequestID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Request-ID", uuid.NewString())
+		next.ServeHTTP(w, r)
+	})
+}
+
+func withLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		log.Printf("%s %s (%s)", r.Method, r.URL.Path, time.Since(start))
+	})
+}
+
+func main() {
+	h := withRequestID(withLogging(http.HandlerFunc(hello)))
+	http.ListenAndServe(":8080", h)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Порядок объявления решает: первым при входе сработает <code>withRequestID</code>, затем <code>withLogging</code>, и только потом сам <code>hello</code>. Такую цепочку удобно собрать через маленький хелпер:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// chain склеивает middleware слева направо: сначала outer, потом inner, потом h
+func chain(h http.Handler, middlewares ...func(http.Handler) http.Handler) http.Handler {
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		h = middlewares[i](h)
+	}
+	return h
+}
+
+func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", hello)
+	root := chain(mux, withLogging, withRequestID)
+	log.Fatal(http.ListenAndServe(":8080", root))
+}</code></pre>
+      </div>
+      <p class="prose-muted">Помимо стандартной библиотеки, для этого есть и сторонние решения:</p>
+      <div class="chips">
+        <span class="chip">chi</span>
+        <span class="chip">gorilla/mux</span>
+        <span class="chip">gorm (не роутер, но тоже маршрутизирует)</span>
+      </div>
+      <p class="prose-muted">На курсе они не используются, но знать о них стоит для кругозора.</p>
+
+      <p>Middleware существует и на стороне клиента — через интерфейс <code>http.RoundTripper</code>. Если <code>http.Client</code> отвечает за удобный API, то <code>RoundTripper</code> контролирует саму отправку запроса и чтение ответа — точка расширения между клиентом и транспортом:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// withAPIKey оборачивает транспорт: перед реальным запросом дописывает заголовок
+func withAPIKey(key string, next http.RoundTripper) http.RoundTripper {
+	return roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		req = req.Clone(req.Context())
+		req.Header.Set("X-API-Key", key)
+		return next.RoundTrip(req)
+	})
+}
+
+type roundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func main() {
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: withAPIKey("secret", http.DefaultTransport),
+	}
+
+	resp, err := client.Get("https://example.com")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	log.Println("status:", resp.Status)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Через поле <code>Transport</code> цепочки middleware строятся точно так же, как на сервере — удобно для метрик, логов и общих заголовков на все исходящие запросы.</p>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <ul class="source-list">
+      <li><a href="https://neerc.ifmo.ru/wiki/index.php?title=OSI_Model"><span class="arrow">↗</span>Модель OSI</a></li>
+      <li><a href="https://ru.wikipedia.org/wiki/TCP/IP"><span class="arrow">↗</span>Модель TCP/IP</a></li>
+      <li><a href="https://developer.mozilla.org/ru/docs/Web/HTTP/Reference/Methods"><span class="arrow">↗</span>HTTP-методы — справочник MDN</a></li>
+      <li><a href="https://developer.mozilla.org/ru/docs/Web/HTTP/Reference/Headers"><span class="arrow">↗</span>HTTP-заголовки — справочник MDN</a></li>
+      <li><a href="https://developer.mozilla.org/ru/docs/Web/HTTP/Reference/Status"><span class="arrow">↗</span>Коды статуса HTTP — справочник MDN</a></li>
+      <li><a href="https://github.com/go-chi/chi"><span class="arrow">↗</span>chi — маршрутизатор</a></li>
+      <li><a href="https://github.com/gorilla/mux"><span class="arrow">↗</span>gorilla/mux</a></li>
+      <li><a href="https://github.com/go-gorm/gorm"><span class="arrow">↗</span>gorm</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 11 из 11 · <b>Конец курса «Go»</b></p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  function highlightComments(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(/(\/\/.*$|#.*$)/gm, '<span class="tok-c">$1</span>');
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+  document.querySelectorAll("pre.code-bash code").forEach(function(el){ el.innerHTML = highlightComments(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

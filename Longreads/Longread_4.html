@@ -1,0 +1,779 @@
+<title>Не паникуй</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .spec-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:.4rem;}
+  @media (max-width:640px){.spec-grid{grid-template-columns:1fr;}}
+  .spec-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.3rem 1.4rem; box-shadow:var(--shadow);}
+  .spec-card h4{margin-bottom:.9rem; display:flex; align-items:center; gap:.5em;}
+  .spec-card.pro h4{color:var(--accent);}
+  .spec-card.con h4{color:var(--accent-2);}
+  .spec-card ul{display:flex; flex-direction:column; gap:.55rem; list-style:none;}
+  .spec-card li{position:relative; padding-left:1.4em; font-size:.97rem; color:var(--text-muted);}
+  .spec-card.pro li::before{content:"+"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.con li::before{content:"–"; position:absolute; left:0; color:var(--accent-2); font-family:var(--font-mono); font-weight:700;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .quote{border-left:3px solid var(--accent-2); padding:.2rem 0 .2rem 1.2rem; font-style:italic; color:var(--text-muted); max-width:62ch;}
+  .quote cite{display:block; margin-top:.5rem; font-family:var(--font-mono); font-size:.78rem; font-style:normal; color:var(--text-faint);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 4 из 11</span>
+    <h1 class="title">Не паникуй<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Как дженерики убирают дублирование кода, почему <code>err != nil</code> — осознанный выбор языка, а не баг, и когда действительно стоит звать <code>panic</code> и <code>recover</code>.</p>
+    <div class="meta-row">
+      <span><b>~19 мин</b> чтения</span>
+      <span><b>3</b> раздела</span>
+      <span>нужны <b>главы 1–3</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#generics"><span class="n">01</span>Дженерики</a></li>
+        <li><a href="#errors"><span class="n">02</span>Ошибки</a></li>
+        <li><a href="#defer"><span class="n">03</span>Defer, panic, recover</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#generics"><span class="n">01</span>Дженерики</a></li>
+      <li><a href="#errors"><span class="n">02</span>Ошибки</a></li>
+      <li><a href="#defer"><span class="n">03</span>Defer, panic, recover</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 Дженерики -->
+    <section class="section" id="generics">
+      <div class="section__head"><span class="section__num">01</span><h2>Обобщение кода через дженерики</h2></div>
+      <p><strong>Дженерики</strong> (generics) — способ писать функции и типы, работающие с разными типами данных без потери типобезопасности. Появились в Go 1.18 (март 2022) — сообщество просило о них долго. Проблема, которую они решают, выглядит так:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func MaxInt(a, b int) int {
+	if a > b { return a }
+	return b
+}
+
+func MaxFloat64(a, b float64) float64 {
+	if a > b { return a }
+	return b
+}
+
+func MaxString(a, b string) string {
+	if a > b { return a }
+	return b
+}
+// Дублирование кода!</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  A["MaxInt(int, int) int"]
+  B["MaxFloat64(float64, float64) float64"]
+  C["MaxString(string, string) string"]
+  A --> D["Max[T cmp.Ordered](a, b T) T"]
+  B --> D
+  C --> D
+        </pre>
+        <p class="diagram-caption">Три одинаковых функции для трёх типов схлопываются в одну обобщённую</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Одна функция для всех сравнимых типов!
+func Max[T cmp.Ordered](a, b T) T {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func main() {
+	fmt.Println(Max(10, 20))           // 20
+	fmt.Println(Max(3.14, 2.71))       // 3.14
+	fmt.Println(Max("hello", "world")) // world
+}</code></pre>
+      </div>
+      <dl class="glossary">
+        <div><dt>[T cmp.Ordered]</dt><dd>обобщённый параметр с наложенным ограничением на тип.</dd></div>
+        <div><dt>T</dt><dd>имя параметра типа — обычно T, K, V.</dd></div>
+        <div><dt>cmp.Ordered</dt><dd>само ограничение — какие типы допустимы для T.</dd></div>
+      </dl>
+      <p class="prose-muted">Обобщённых параметров у функции может быть и несколько:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func Map[T, U any](slice []T, fn func(T) U) []U {
+	result := make([]U, len(slice))
+	for i, v := range slice {
+		result[i] = fn(v)
+	}
+	return result
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// цена дженериков</span>
+        <p>В коде функция-дженерик — одна запись. Но при компиляции под капотом сгенерируется по копии на каждый реально используемый тип. Итог закономерен: бинарный файл растёт в весе — это стоит держать в голове.</p>
+      </div>
+      <p>Обобщёнными бывают и структуры — например, пара значений:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Pair[K, V any] struct {
+	Key   K
+	Value V
+}
+
+func main() {
+	p1 := Pair[string, int]{Key: "age", Value: 30}
+	p2 := Pair[int, string]{Key: 1, Value: "first"}
+
+	fmt.Println(p1) // {age 30}
+	fmt.Println(p2) // {1 first}
+}</code></pre>
+      </div>
+      <p class="prose-muted">Отсюда рукой подать до обобщённых кешей, стеков и прочих структур данных.</p>
+
+      <h3>Ограничения параметров</h3>
+      <p>Тип параметра можно ограничивать вручную. В стандартной библиотеке уже есть готовые ограничения:</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Ограничение</th><th>Что разрешает</th></tr></thead>
+          <tbody>
+            <tr><td class="type">any</td><td>алиас на пустой интерфейс — вообще без ограничений</td></tr>
+            <tr><td class="type">comparable</td><td>только типы, сравнимые через <code>==</code> и <code>!=</code></td></tr>
+            <tr><td class="type">cmp.Ordered</td><td>только упорядоченные типы — с <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted">А ещё ограничения можно писать самому — и, неожиданно, они строятся на интерфейсах:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Ограничение: тип должен иметь метод String()
+type Stringer interface {
+	String() string
+}
+
+func PrintAll[T Stringer](items []T) {
+	for _, item := range items {
+		fmt.Println(item.String())
+	}
+}</code></pre>
+      </div>
+      <p>Или задать конкретный перечень типов через <code>|</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Ограничение: только int или float64
+type Number interface {
+	int | float64
+}
+
+func Sum[T Number](numbers []T) T {
+	var sum T
+	for _, n := range numbers {
+		sum += n
+	}
+	return sum
+}</code></pre>
+      </div>
+      <p class="prose-muted">А если нужен и встроенный тип, и любой кастомный тип на его основе — на помощь приходит «приближённое ограничение» <code>~</code>: конкретный тип и всё, для чего он базовый.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Разрешает int и пользовательские типы на основе int
+type Integer interface {
+	~int
+}
+
+type MyInt int
+
+func Double[T Integer](value T) T {
+	return value * 2
+}
+
+func main() {
+	var x int = 5
+	var y MyInt = 10
+
+	fmt.Println(Double(x)) // 10
+	fmt.Println(Double(y)) // 20
+}</code></pre>
+      </div>
+      <p class="prose-muted">Сам <code>cmp.Ordered</code> — это как раз такой набор базовых типов (<a href="https://github.com/golang/go/blob/go1.25.6/src/cmp/cmp.go#L18">исходник</a>):</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">cmp.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Ordered interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64 |
+		~string
+}</code></pre>
+      </div>
+
+      <h3>Где дженериков пока нет</h3>
+      <p>Методы не могут иметь собственные обобщённые параметры — но могут пользоваться обобщёнными параметрами своего ресивера:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Container[T any] struct {
+	value T
+}
+
+// OK: метод использует T из структуры
+func (c Container[T]) Get() T {
+	return c.value
+}
+
+func (c *Container[T]) Set(value T) {
+	c.value = value
+}
+
+// ОШИБКА: метод не может иметь свои параметры типов
+// func (c Container[T]) Convert[U any](fn func(T) U) U {
+//     return fn(c.value)
+// }</code></pre>
+      </div>
+      <blockquote class="quote">
+        In Go, one of the main roles of methods is to permit types to implement interfaces. It is not clear whether it is reasonably possible to permit parameterized methods to implement interfaces.
+        <cite>— из FAQ языка Go</cite>
+      </blockquote>
+      <p class="prose-muted">Подробности — в <a href="https://go.dev/doc/faq#generic_methods">FAQ</a> и в <a href="https://go.googlesource.com/proposal/+/master/design/43651-type-parameters.md#no-parameterized-methods">объяснении дизайна</a>. Но «никогда не говори никогда»: на горизонте есть <a href="https://github.com/golang/go/issues/77273">proposal от Роберта Гризмера</a>, одного из отцов-основателей языка, с обоснованием такой возможности — быть может, через год-два политика изменится.</p>
+
+      <h3>Использование дженериков</h3>
+      <div class="spec-grid">
+        <div class="spec-card pro">
+          <h4>Использовать, когда</h4>
+          <ul>
+            <li>Сложные структуры данных — списки, стеки, деревья, графы</li>
+            <li>Утилитные функции — Map, Filter, Reduce</li>
+            <li>Обобщённые алгоритмы — сортировка, поиск</li>
+            <li>Иначе пришлось бы дублировать код под разные типы</li>
+          </ul>
+        </div>
+        <div class="spec-card con">
+          <h4>Не использовать, когда</h4>
+          <ul>
+            <li>Достаточно интерфейса — нужно поведение, а не тип</li>
+            <li>Функция простая и тип заранее известен</li>
+          </ul>
+        </div>
+      </div>
+      <ul class="plain">
+        <li>Начинай с конкретных типов, обобщай позже.</li>
+        <li>Используй понятные имена: T, K, V для простых случаев.</li>
+        <li>Всегда ограничивай типы.</li>
+        <li>Предпочитай интерфейсы, когда нужно поведение.</li>
+        <li>Не злоупотребляй — простота важнее универсальности.</li>
+      </ul>
+    </section>
+
+    <!-- 02 Ошибки -->
+    <section class="section" id="errors">
+      <div class="section__head"><span class="section__num">02</span><h2>Ошибки</h2></div>
+      <p>Одна из самых холиварных тем в Go — <strong>ошибки и их обработка</strong>. Исключений в языке нет — есть ошибки, которые рождаются в месте возникновения и поднимаются вверх, до пользователя или до места логирования. В основе — простая концепция <strong>errors as values</strong>: ошибка не просто условие для проверки, а полноценное значение своего типа, с которым можно работать как с любыми другими данными.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>_, err := fmt.Scan(&x)
+if err != nil {
+	fmt.Println(err)
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// главное правило</span>
+        <p><strong>Ошибки нужно обрабатывать всегда.</strong> Не пренебрегай этим — вовремя пойманная ошибка это залог успешной работы твоей программы.</p>
+      </div>
+      <p class="prose-muted">Да, шаблонного <code>err != nil</code> в go-коде очень много, и это то, что пугает новичков. Сообщество не раз предлагало от него избавиться: <a href="https://github.com/golang/go/issues/32825">пример 1</a>, <a href="https://github.com/golang/go/issues/71528">пример 2</a>, <a href="https://github.com/golang/go/issues/71808">пример 3</a>. Но команда языка выпустила отдельный <a href="https://go.dev/blog/error-syntax">пост</a>, где прямо заявила: мнение не изменится, <code>err != nil</code> — лучший подход для Go. С этим можно смириться и идти дальше.</p>
+
+      <p>Что такое ошибка в Go? Значение. И ещё — <strong>интерфейс</strong>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">builtin.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type error interface {
+	Error() string
+}</code></pre>
+      </div>
+      <p class="prose-muted">Значит, ошибкой может быть любой тип, реализующий этот <a href="https://github.com/golang/go/blob/go1.25.6/src/builtin/builtin.go#L308">интерфейс</a> — <code>error</code> в Go по сути встроенный тип, с которым можно работать по-разному.</p>
+
+      <h3>Контекст ошибки</h3>
+      <p>Плохой пример: ошибка поднимается наверх без единой зацепки о том, что случилось:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func two() error {
+	err := one()
+	if err != nil {
+		return err // Поднимаем ошибку наверх, не понимая контекста
+	}
+	return nil
+}
+
+func three() error {
+	err := two()
+	if err != nil {
+		return err // И снова — контекст потерян
+	}
+	return nil
+}</code></pre>
+      </div>
+      <p class="prose-muted">Ошибку стоит обогащать: параметрами функции, значениями переменных, дополнительным сообщением. Проще всего — через <code>fmt.Errorf</code> и глагол <code>%w</code>, который сохраняет доступ к исходной ошибке:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>return fmt.Errorf("ошибка при обработке данных пользователя %s: %w", userID, err)</code></pre>
+      </div>
+      <p class="prose-muted">Тот же результат даёт метод <code>Wrap</code> из сторонних пакетов вроде <code>github.com/cockroachdb/errors</code>.</p>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  E0["ErrInvalidArgument
+исходная ошибка"] -->|"fmt.Errorf(...%w..., err)"| E1["обёрнута контекстом
+уровня 1"]
+  E1 -->|"fmt.Errorf(...%w..., err)"| E2["обёрнута контекстом
+уровня 2"]
+  E2 -.->|"errors.Unwrap / errors.Is"| E1
+  E1 -.->|"errors.Unwrap / errors.Is"| E0
+        </pre>
+        <p class="diagram-caption">Каждый <code>%w</code> добавляет звено в цепочку — <code>errors.Is</code>/<code>errors.As</code> проходят её насквозь</p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Инструмент</th><th>Что делает</th></tr></thead>
+          <tbody>
+            <tr><td class="type">errors.New</td><td>создаёт новую, «исходную» ошибку</td></tr>
+            <tr><td class="type">fmt.Errorf + %w</td><td>оборачивает существующую ошибку контекстом, сохраняя цепочку</td></tr>
+            <tr><td class="type">errors.Is</td><td>ищет в цепочке конкретную ошибку (в т.ч. sentinel)</td></tr>
+            <tr><td class="type">errors.As</td><td>ищет в цепочке ошибку конкретного типа и извлекает её</td></tr>
+            <tr><td class="type">errors.Unwrap</td><td>достаёт из обёртки следующую ошибку в цепочке</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Создать «исходную» ошибку просто:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var ErrInvalidArgument = errors.New("invalid argument")
+
+func checkArgument(a int) error {
+	if a == 0 {
+		return ErrInvalidArgument
+	}
+	return nil
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// соглашение</span>
+        <p>Sentinel-ошибки по конвенции называют с префиксом <code>Err...</code> (для экспортируемых) или <code>err...</code> (для приватных).</p>
+      </div>
+
+      <p>А проверить, что за ошибка пришла и какого она типа — <code>errors.As</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type MyError struct {
+	Code int
+	Msg  string
+}
+
+func (e *MyError) Error() string {
+	return fmt.Sprintf("Ошибка %d: %s", e.Code, e.Msg)
+}
+
+func doSomething() error {
+	return fmt.Errorf("дело дрянь: %w", &MyError{Code: 500, Msg: "Сервер недоступен"})
+}
+
+func main() {
+	var targetErr *MyError
+
+	err := doSomething()
+	if errors.As(err, &targetErr) {
+		fmt.Println("Код ошибки:", targetErr.Code, "Сообщение:", targetErr.Msg)
+	} else {
+		fmt.Println("Произошла неизвестная ошибка")
+	}
+}</code></pre>
+      </div>
+      <p class="prose-muted">В версии 1.26 синтаксис упростили:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>pathError, ok := errors.AsType[*fs.PathError](err)</code></pre>
+      </div>
+
+      <h3>Как избавиться от err != nil</h3>
+      <p class="prose-muted">Способ есть, но используется он редко — идиоматичным его не назвать. Можно абстрагировать обработку ошибок в отдельный объект:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type errorHandler struct {
+	SampleObject sampleObjectType
+	Err          error
+}
+
+func (handler *errorHandler) Write(param ParamType) {
+	if handler.Err != nil {
+		return
+	}
+	_, handler.Err = handler.SampleObject.SomeAction(param)
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 03 Defer / panic / recover -->
+    <section class="section" id="defer">
+      <div class="section__head"><span class="section__num">03</span><h2>Отложенные вызовы: defer, panic, recover</h2></div>
+      <p>Ключевое слово <code>defer</code> откладывает выполнение функции до завершения той функции, в чьём теле оно вызвано — удобно, например, писать закрытие соединения сразу рядом с его открытием.</p>
+      <p>В теле функции можно вызвать сколько угодно <code>defer</code> — выполняются они по принципу <strong>LIFO</strong>: последним объявлен — первым выполнен.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func Example() {
+	for i := 3; i > 0; i-- {
+		defer fmt.Print(i, " ") // Выведет в обратном порядке: 1 2 3
+	}
+}
+
+func Example3() {
+	for i := 3; i > 0; i-- {
+		defer func(n int) { // Анонимная функция тоже подходит
+			fmt.Print(n, " ")
+		}(i)
+	}
+}</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TB
+  P1["defer Print(3) — объявлен первым"] --> P2["defer Print(2)"] --> P3["defer Print(1) — объявлен последним"]
+  P3 -.->|"выполнится первым"| R1["Print: 1"]
+  P2 -.->|"затем"| R2["Print: 2"]
+  P1 -.->|"выполнится последним"| R3["Print: 3"]
+        </pre>
+        <p class="diagram-caption">LIFO: последний объявленный <code>defer</code> отрабатывает первым</p>
+      </div>
+      <p class="prose-muted"><code>defer</code> гарантирует выполнение своего блока кода вне зависимости от того, случилась ли по пути ошибка.</p>
+
+      <h3>Паники не ошибки</h3>
+      <p>Аналог необрабатываемых исключений в Go — <strong>паника</strong>, вызываемая через <code>panic()</code>. Это фатальный сбой, после которого дальнейшее выполнение программы бессмысленно: приложение падает, печатая в стандартный вывод стек вызовов с местом паники.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func foo() {
+	panic("Something went wrong!")
+}
+
+func main() {
+	fmt.Println("Start")
+	foo()
+	fmt.Println("End") // Эта строка не выполнится
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// dont panic</span>
+        <p>Соблазн раскидать <code>panic</code> повсюду велик — но <a href="https://go.dev/wiki/CodeReviewComments#dont-panic">принцип языка</a> прямо против: паника нужна лишь в крайних случаях. Это не аналог исключений из других языков, а сигнал «дальше действительно нельзя».</p>
+      </div>
+
+      <div class="spec-grid">
+        <div class="spec-card pro">
+          <h4>Паника уместна</h4>
+          <ul>
+            <li>Ошибка фатальна, продолжать работу невозможно</li>
+            <li>Ошибка ломает логику программы и не может быть исправлена на месте</li>
+            <li>Ошибку в принципе невозможно обработать</li>
+          </ul>
+        </div>
+        <div class="spec-card con">
+          <h4>Паника не нужна</h4>
+          <ul>
+            <li>Почти всегда — когда ошибка ожидаема и некритична</li>
+            <li>Когда её можно исправить, залогировать или передать дальше</li>
+            <li>Когда программа способна продолжить работу</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Ловец паник</h3>
+      <p>Паника крашит выполнение — но её можно перехватить, обработать и продолжить работу как ни в чём не бывало. Для этого есть встроенная функция <code>recover()</code>. Даже после паники управление переходит в ближайший <code>defer</code> — вот он и может позвать <code>recover</code>.</p>
+      <div class="callout callout-note">
+        <span class="callout-tag">// как работает recover</span>
+        <p><code>recover()</code> действует только внутри <code>defer</code>. Вызванная где-то ещё во время активной паники — она просто пропускает панику дальше и программа всё равно завершится; а без активной паники — вернёт <code>nil</code>, и работа продолжится штатно.</p>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TD
+  A["panic(...)"] --> B["выполнение прерывается,
+начинается размотка стека"]
+  B --> C{"есть defer
+с recover()?"}
+  C -- "да" --> D["recover() перехватывает
+r != nil"]
+  D --> E["функция возвращается штатно,
+программа продолжает работу"]
+  C -- "нет" --> F["паника поднимается
+выше по стеку"]
+  F --> G["не поймана нигде —
+crash + stack trace"]
+        </pre>
+        <p class="diagram-caption">recover() работает только внутри defer — это единственная точка входа для перехвата паники</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func Example() {
+	fmt.Println("Inside function")
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered:", r)
+		}
+	}()
+	panic("Panic!")
+}
+
+func main() {
+	Example()
+	fmt.Println("Main function continues")
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">вывод</span><span class="code-block__lang">stdout</span></div>
+        <pre class="code-bash"><code>Inside function
+Recovered: Panic!
+Main function continues</code></pre>
+      </div>
+      <p class="prose-muted">Как и самой паники, восстановления после неё стоит избегать в обычном коде — оставь его для действительно крайних случаев. Dont panic!</p>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <h3 style="font-family:var(--font-mono); font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint);">Статьи</h3>
+    <ul class="source-list">
+      <li><a href="https://go.dev/blog/intro-generics"><span class="arrow">↗</span>Введение в дженерики</a></li>
+      <li><a href="https://go.dev/blog/when-generics"><span class="arrow">↗</span>Когда использовать дженерики</a></li>
+      <li><a href="https://go.dev/blog/generic-slice-functions"><span class="arrow">↗</span>Надёжные универсальные функции на срезах</a></li>
+      <li><a href="https://bitfieldconsulting.com/posts/generics"><span class="arrow">↗</span>Руководство по дженерикам</a></li>
+      <li><a href="https://dave.cheney.net/2012/01/18/why-go-gets-exceptions-right"><span class="arrow">↗</span>Дейв Чейни — «Почему в Go правильные исключения»</a></li>
+      <li><a href="https://habr.com/ru/companies/otus/articles/453806/"><span class="arrow">↗</span>Обработка ошибок в Go</a></li>
+      <li><a href="https://go.dev/blog/defer-panic-and-recover"><span class="arrow">↗</span>defer, panic, recover</a></li>
+      <li><a href="https://go.dev/blog/error-syntax"><span class="arrow">↗</span>[On|No] syntactic support for error handling</a></li>
+      <li><a href="https://go.dev/blog/error-handling-and-go"><span class="arrow">↗</span>Error handling and Go</a></li>
+      <li><a href="https://www.joeshaw.org/dont-defer-close-on-writable-files/"><span class="arrow">↗</span>Don't defer Close() on writable files</a></li>
+      <li><a href="https://victoriametrics.com/blog/defer-in-go/index.html"><span class="arrow">↗</span>Golang defer: from basic to traps</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 4 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

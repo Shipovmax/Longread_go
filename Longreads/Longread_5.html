@@ -1,0 +1,660 @@
+<title>Границы пакета</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .spec-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:.4rem;}
+  @media (max-width:640px){.spec-grid{grid-template-columns:1fr;}}
+  .spec-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.3rem 1.4rem; box-shadow:var(--shadow);}
+  .spec-card h4{margin-bottom:.9rem; display:flex; align-items:center; gap:.5em;}
+  .spec-card.pro h4{color:var(--accent);}
+  .spec-card.con h4{color:var(--accent-2);}
+  .spec-card ul{display:flex; flex-direction:column; gap:.55rem; list-style:none;}
+  .spec-card li{position:relative; padding-left:1.4em; font-size:.97rem; color:var(--text-muted);}
+  .spec-card.pro li::before{content:"+"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.con li::before{content:"–"; position:absolute; left:0; color:var(--accent-2); font-family:var(--font-mono); font-weight:700;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 5 из 11</span>
+    <h1 class="title">Границы пакета<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Как Go режет код на пакеты и модули, зачем нужен <code>internal/</code>, что на самом деле лежит в <code>go.mod</code> и <code>go.sum</code>, и какая структура проекта не подведёт в реальной жизни.</p>
+    <div class="meta-row">
+      <span><b>~20 мин</b> чтения</span>
+      <span><b>2</b> раздела</span>
+      <span>нужны <b>главы 1–4</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#packages"><span class="n">01</span>Пакеты и модули</a></li>
+        <li><a href="#layout"><span class="n">02</span>Структура проекта</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#packages"><span class="n">01</span>Пакеты и модули</a></li>
+      <li><a href="#layout"><span class="n">02</span>Структура проекта</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 Пакеты и модули -->
+    <section class="section" id="packages">
+      <div class="section__head"><span class="section__num">01</span><h2>Пакеты, модули и области видимости</h2></div>
+      <p>По мере роста кодовой базы неизбежно встают вопросы: как организовать код, чтобы он оставался понятным? Как обеспечить переиспользование? Как совместить гибкость с типобезопасностью? Go отвечает на них двумя механизмами: <strong>пакетами</strong> — организация кода и область видимости, и <strong>модулями</strong> — версии, зависимости, границы проекта.</p>
+
+      <p><strong>Пакет</strong> — набор файлов с одинаковым объявлением <code>package</code> в одном каталоге, компилируемых как единое целое: основная единица организации и переиспользования кода. <strong>Модуль</strong> — коллекция пакетов, публикуемая и версионируемая как единое целое; определяется файлом <code>go.mod</code> в корне и на практике почти всегда — отдельная программа или сервис.</p>
+
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">дерево каталогов</span><span class="code-block__lang">модуль</span></div>
+        <pre class="code-bash"><code>example.com/my-module # модуль, представляющий собой программу
+├── go.mod
+├── cmd/        # пакет с точкой входа в программу
+│   └── app/
+│       └── main.go # точка входа в программу
+├── internal/   # пакеты, доступные только внутри этого модуля/программы
+│   ├── config/ # пакет для работы с конфигурациями
+│   └── server/ # пакет для работы с серверной логикой
+└── pkg/        # общедоступные пакеты для прочих программ и сервисов
+    ├── database/
+    └── logger/</code></pre>
+      </div>
+      <p class="prose-muted">Точки входа — в <code>cmd</code>, внутренние компоненты — в <code>internal</code>, публичные пакеты — в <code>pkg</code>. Такое деление держит границы между компонентами чистыми.</p>
+
+      <h3>Работа с пакетами</h3>
+      <p>Каждый файл начинается с объявления пакета — <em>package clause</em>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">config.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package config</code></pre>
+      </div>
+      <p class="prose-muted">В одном пакете может быть сколько угодно файлов. Особый случай — пакет <code>main</code>: точка входа исполняемой программы, содержащая функцию <code>main</code>.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package main
+
+func main() {
+	// Начало выполнения программы
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// правило имени</span>
+        <p>Директорию и пакет внутри неё принято называть одинаково. Технически можно назвать директорию <code>config</code>, а внутри объявить <code>package configuration</code> — но это дурной тон. А вот два разных <code>package clause</code> в одной директории компилятор просто не примет — это запрещено языком.</p>
+      </div>
+      <p>Код одного пакета подключается к другому через <code>import</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>import (
+	"fmt"                        // стандартный пакет
+	"my-module/internal/config"  // внутренний пакет
+	"github.com/sirupsen/logrus" // внешний пакет
+)
+
+func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		logrus.WithError(err).Fatalln("loading config")
+	}
+	fmt.Printf("Config loaded: %+v\n", cfg)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Для стандартной библиотеки достаточно имени пакета (<code>net/http</code>). Для своего пакета нужен полный <strong>путь пакета</strong> — обычно путь модуля плюс подкаталог (<code>my-module/internal/config</code>). Путь может быть абсолютным (<code>golang.org/x/net/html</code>) или указывать на пакет стандартной библиотеки. Для внешних зависимостей используется <code>go get</code> — о нём чуть ниже.</p>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  A["пакет A"] -->|imports| B["пакет B"]
+  B -.->|imports| A
+        </pre>
+        <p class="diagram-caption"><code>import cycle not allowed</code> — Go запрещает циклические импорты ради предсказуемой сборки</p>
+      </div>
+      <p class="prose-muted">Это нужно для быстрой компиляции, предсказуемой иерархии зависимостей и защиты от архитектурного беспорядка — при циклах порядок сборки было бы невозможно (или почти невозможно) определить.</p>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p>Вынести общий код в третий пакет.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p>Использовать интерфейсы вместо прямых зависимостей.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p>Переосмыслить архитектуру компонентов.</p></div>
+      </div>
+
+      <h4>Области видимости пакетов</h4>
+      <p class="prose-muted">Видимость идентификатора внутри пакета, как и раньше, определяется регистром первой буквы: <strong>экспортируемые</strong> начинаются с заглавной, <strong>неэкспортируемые</strong> — с маленькой.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">user.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package user
+
+// Экспортированный тип (виден извне)
+type User struct {
+	Name string // экспортированное поле
+	age  int    // неэкспортированное поле
+}
+
+// Экспортированная функция
+func NewUser(name string, age int) User {
+	return User{Name: name, age: age}
+}
+
+// Неэкспортированная функция
+func validate(u User) bool {
+	return u.Name != "" && u.age > 0
+}</code></pre>
+      </div>
+      <p class="prose-muted"><code>NewUser</code> — контролируемый конструктор, гарантирующий валидность данных; <code>age</code> и <code>validate</code> скрыты от внешнего мира:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>u := user.NewUser("Alice", 30)
+
+fmt.Println(u.Name) // доступно
+
+fmt.Println(u.age)  // ошибка компиляции
+user.validate(u)    // ошибка компиляции</code></pre>
+      </div>
+
+      <h4>Функция init</h4>
+      <p>Каждый пакет может содержать <code>init</code> — выполняется на стадии инициализации:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">database.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package database
+
+import "log"
+
+var db *Database
+
+func init() {
+	// Выполнится один раз при импорте пакета
+	log.Println("Initializing database...")
+	db = &Database{}
+}
+
+type Database struct {
+	// ...
+}</code></pre>
+      </div>
+      <p class="prose-muted"><code>init</code> запускается, если пакет вошёл в сборку — то есть был импортирован в <code>main</code> напрямую или через цепочку импортов. Часто используется для настройки глобальных переменных или регистрации драйверов — но для сложной инициализации с возможными ошибками лучше явные конструкторы.</p>
+      <div class="spec-grid">
+        <div class="spec-card pro">
+          <h4>Особенности init</h4>
+          <ul>
+            <li>В одном пакете может быть несколько функций init</li>
+            <li>Выполняются после инициализации глобальных переменных</li>
+            <li>Порядок: сначала импортируемые пакеты, затем текущий</li>
+            <li>Не принимают параметров и ничего не возвращают</li>
+          </ul>
+        </div>
+        <div class="spec-card con">
+          <h4>Чем это опасно</h4>
+          <ul>
+            <li>Порядок срабатывания при взаимных импортах легко упустить — получаешь необъяснимое поведение</li>
+            <li>Такие функции тяжело тестировать по своей природе</li>
+            <li>Часто используются для глобального состояния — а это плохой тон</li>
+            <li>Ничего не возвращают — ошибки внутри чаще всего просто паникуют</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4>Именование пакетов</h4>
+      <p>Стоит избегать «статтеринга» (stuttering) — повторения имени пакета в именах его экспортируемых идентификаторов. Плохо:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">user.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package user
+
+func UserCreate() { /* ... */ }
+func UserDelete() { /* ... */ }
+// снаружи: user.UserCreate() — избыточно</code></pre>
+      </div>
+      <p class="prose-muted">Лучше:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">user.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package user
+
+func Create() { /* ... */ }
+func Delete() { /* ... */ }
+// снаружи: user.Create() — читается как строка в книге</code></pre>
+      </div>
+      <p class="prose-muted">Стоит избегать и обобщённых названий вроде <code>common</code>, <code>helpers</code>, <code>utils</code> — по такому имени невозможно понять зону ответственности пакета. Имя должно быть коротким и содержательным: <code>pricing</code>, <code>database</code>. Ориентир — исходный код самого Go.</p>
+
+      <h3>Модули</h3>
+      <p>Каждый Go-проект начинается с одной команды:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code># Создание нового модуля
+go mod init github.com/username/project-name</code></pre>
+      </div>
+      <p class="prose-muted">Появляются два файла: <code>go.mod</code> — описание модуля и зависимостей, <code>go.sum</code> — криптографические хеши зависимостей.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">go.mod</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>module github.com/username/project-name
+
+go 1.25
+
+require (
+	github.com/gin-gonic/gin v1.9.1
+	github.com/golang-migrate/migrate/v4 v4.16.2
+	github.com/lib/pq v1.10.9
+	github.com/spf13/viper v1.16.0
+	gorm.io/driver/postgres v1.5.2
+	gorm.io/gorm v1.25.4
+)
+
+require (
+	github.com/bytedance/sonic v1.9.1 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
+	// ... другие косвенные зависимости
+)</code></pre>
+      </div>
+
+      <dl class="glossary">
+        <div><dt>module</dt><dd>уникальное имя проекта в экосистеме Go. При доменном имени (<code>github.com/...</code>, <code>gitlab.com/...</code>) Go ожидает найти по этому пути действующий git-репозиторий и умеет качать зависимости прямо из него. Для непубликуемых проектов подойдёт и простое имя без домена, но домен лучше указывать заранее — ради совместимости на будущее. Смена имени модуля потребует правки всех импортов в проекте.</dd></div>
+        <div><dt>go</dt><dd>минимальная версия Go, нужная для сборки — гарантирует совместимость с используемыми возможностями языка и не даёт собрать проект на устаревшем компиляторе.</dd></div>
+        <div><dt>require</dt><dd>список зависимостей: <strong>прямых</strong> (импортируются в коде проекта напрямую) и <strong>косвенных</strong> (нужны прямым зависимостям, помечены <code>// indirect</code>) — пометка помогает понять дерево зависимостей и безопасно чистить лишнее.</dd></div>
+        <div><dt>replace</dt><dd>подменяет зависимость на другую версию или локальный путь — пригодится, когда отлаживаешь баг в форке чужой библиотеки или тестируешь исправление до официального патча: <code>replace github.com/old/package =&gt; ../local/package</code>.</dd></div>
+        <div><dt>exclude</dt><dd>запрещает загрузку конкретной версии зависимости — например, той, где найдена уязвимость: <code>exclude github.com/problematic/package v1.5.0</code>.</dd></div>
+      </dl>
+
+      <p>Модуль резолвится по доменному имени в несколько шагов:</p>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p>Go определяет хостинг-платформу по домену (<code>github.com</code>, <code>gitlab.com</code> и т. д.).</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p>Обращается к API платформы за информацией о репозитории.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p>Скачивает нужную версию или коммит.</p></div>
+        <div class="diff-item"><span class="diff-num">4</span><p>Кэширует зависимость локально.</p></div>
+      </div>
+
+      <div class="callout callout-note">
+        <span class="callout-tag">// зачем go.sum</span>
+        <p>Представь заказ из интернет-магазина: <code>go.sum</code> — это чек с уникальными номерами каждого товара. Курьер привёз посылку — ты сверяешь номера с чеком. Если кто-то подменил товар, это сразу видно.</p>
+      </div>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Надёжная защита.</strong> При сборке Go сверяет скачанные пакеты с хешами в go.sum — подмену на вредоносный код он остановит немедленно.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Идеальная воспроизводимость.</strong> Все в команде и весь CI/CD получают ровно те же версии зависимостей.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Полная история версий.</strong> Хешятся и прямые, и косвенные зависимости, вплоть до конкретных коммитов.</p></div>
+      </div>
+      <p class="prose-muted">Файл обновляется автоматически — при <code>go get</code>, обновлении зависимостей и <code>go mod tidy</code>. Редактировать руками не нужно, а вот <strong>исключать из git — нельзя</strong>: это твоя страховка.</p>
+
+      <h4>Работа с зависимостями</h4>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Команда</th><th>Что делает</th></tr></thead>
+          <tbody>
+            <tr><td class="type">go get pkg</td><td>добавляет последнюю версию зависимости</td></tr>
+            <tr><td class="type">go get pkg@v1.9.1</td><td>добавляет конкретную версию — предпочтительнее <code>@latest</code></td></tr>
+            <tr><td class="type">go get -u ./...</td><td>обновляет все зависимости проекта</td></tr>
+            <tr><td class="type">go mod tidy</td><td>сортирует, обновляет и убирает неиспользуемые зависимости</td></tr>
+            <tr><td class="type">go install pkg@version</td><td>собирает и ставит бинарь в $GOBIN, не трогая go.mod проекта</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted">Последняя команда — типичный способ поставить внешние dev-инструменты (линтеры, генераторы, форматтеры), не засоряя зависимости самого проекта:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go install golang.org/x/tools/cmd/goimports@latest
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// не забывай</span>
+        <p>Периодически вызывай <code>go mod tidy</code> — он держит <code>go.mod</code> в чистоте.</p>
+      </div>
+
+      <h3>Важная информация о базовых пакетах</h3>
+      <p>Go даёт особый механизм ограничения доступа: любой пакет внутри директории <code>internal</code> доступен только пакетам своего модуля.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">дерево каталогов</span><span class="code-block__lang">модуль</span></div>
+        <pre class="code-bash"><code>my-module/
+├── internal/
+│   └── database/  // доступен только внутри my-module
+├── api/
+│   └── handler.go // может импортировать my-module/internal/database
+└── client/
+    └── main.go    // может импортировать my-module/internal/database</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  A["api/handler.go
+тот же модуль"] -->|разрешено| I["internal/database"]
+  B["client/main.go
+тот же модуль"] -->|разрешено| I
+  C["другой модуль,
+импортирующий my-module"] -.->|запрещено| I
+        </pre>
+        <p class="diagram-caption">internal доступен только коду внутри собственного модуля — снаружи он попросту невидим</p>
+      </div>
+
+      <p class="prose-muted"><code>internal</code> можно объявить не только в корне модуля, а на любом уровне вложенности — тогда правило сужается до родительского пакета и его подпакетов:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">дерево каталогов</span><span class="code-block__lang">модуль</span></div>
+        <pre class="code-bash"><code>my-module/
+├── internal/
+│   └── database/           // доступен только внутри my-module
+│       ├── internal/
+│       │   └── anypackage/ // доступен только внутри my-module/internal/database
+│       └── postgres/       // может импортировать .../database/internal/...
+├── api/
+│   └── handler.go // может импортировать database, но не database/internal/...
+└── client/
+    └── main.go    // может импортировать database, но не database/internal/...</code></pre>
+      </div>
+
+      <p>А если пакетом всё же нужно поделиться с миром — для этого <code>pkg</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">дерево каталогов</span><span class="code-block__lang">модуль</span></div>
+        <pre class="code-bash"><code>my-module/
+├── internal/
+│   └── database/       // доступен только внутри my-module
+├── pkg/
+│   └── csv_converter/  // доступен и внутри my-module, и снаружи
+├── api/
+│   └── handler.go
+└── client/
+    └── main.go</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// осторожно с pkg</span>
+        <p><code>pkg/</code> легко превращается в «свалку общих утилит», а у зависящих модулей начинаются проблемы с версионированием и жёсткой привязкой к чужому сервису. Используй его как можно реже — а если подпакетом начинают пользоваться сразу несколько сервисов, выноси его в отдельную библиотеку.</p>
+      </div>
+    </section>
+
+    <!-- 02 Структура проекта -->
+    <section class="section" id="layout">
+      <div class="section__head"><span class="section__num">02</span><h2>Структура проекта на Go</h2></div>
+      <p>Правильная организация проекта снижает когнитивную нагрузку, ускоряет ревью и упрощает онбординг. Ключевая мысль про Go: у него нет «единственно правильной» структуры (<code>layout</code>). Важно, чтобы команда договорилась о наборе паттернов заранее — и последовательно им следовала, не боясь эволюционировать структуру по мере роста проекта. В open-source такие соглашения часто фиксируют в <code>CONTRIBUTING.md</code>.</p>
+
+      <h3>Basic command</h3>
+      <p class="prose-muted">Официальный гайдлайн <a href="https://go.dev/doc/modules/layout">«Organizing a Go module»</a> — не строгий стандарт, а рекомендации авторов языка. Самый простой паттерн — <a href="https://go.dev/doc/modules/layout#basic-command">Basic command</a>: минимальная исполняемая программа, весь код в пакете <code>main</code> в корне.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">дерево каталогов</span><span class="code-block__lang">layout</span></div>
+        <pre class="code-bash"><code>project-root-directory/
+  go.mod
+  auth.go
+  auth_test.go
+  client.go
+  main.go</code></pre>
+      </div>
+      <p class="prose-muted">Точку входа по конвенции держат в <code>main.go</code>. Подходит для небольших программ, которым не нужно деление логики по пакетам.</p>
+
+      <h3>Server project</h3>
+      <p><a href="https://go.dev/doc/modules/layout#server-project">Server project</a> — паттерн для серверов: логика прячется под <code>internal</code>, все точки входа собираются в <code>cmd</code> — это удобно, когда в репозитории много не-Go кода рядом.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">дерево каталогов</span><span class="code-block__lang">layout</span></div>
+        <pre class="code-bash"><code>project-root-directory/
+  go.mod
+  internal/
+    auth/
+      ...
+    metrics/
+      ...
+    model/
+      ...
+  cmd/
+    api-server/
+      main.go
+    metrics-analyzer/
+      main.go
+    ...
+  ... остальные директории проекта с не-Go кодом</code></pre>
+      </div>
+      <ul class="plain">
+        <li>Сразу видно, что экспортируемых Go-пакетов нет — весь код живёт в <code>internal/</code> и <code>cmd/</code>;</li>
+        <li>Точки входа явно собраны в отдельной <code>cmd/</code>;</li>
+        <li>Остальные директории (<code>docker/</code>, <code>chart/</code>, <code>.gitlab/</code>) не мешают Go-коду — их можно добавлять как угодно.</li>
+      </ul>
+      <p class="prose-muted">Большинство других layout'ов на практике — это Server project плюс несколько добавленных директорий под свои нужды.</p>
+
+      <h3>Другие ориентиры</h3>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><a href="https://github.com/golang-standards/project-layout">golang-standards/project-layout</a> — неофициальный, но широко используемый набор рекомендаций для крупных проектов. Стандартом он не является: Расс Кокс <a href="https://github.com/golang-standards/project-layout/issues/117">официально подтвердил</a>, что у Go в принципе нет стандартов такого рода.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><a href="https://github.com/golang/go/tree/go1.25.7">Исходный код Go</a> — хороший ориентир по именованию и структуре пакетов, хоть местами и противоречит собственным идиомам языка. В любом правиле бывают исключения.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p>Более общие архитектурные подходы стоит знать хотя бы поверхностно — они пригодятся не только в Go.</p></div>
+      </div>
+      <div class="chips">
+        <span class="chip">DDD</span>
+        <span class="chip">onion architecture</span>
+        <span class="chip">clean architecture</span>
+        <span class="chip">CQRS</span>
+      </div>
+
+      <div class="callout callout-note">
+        <span class="callout-tag">// ориентир курса</span>
+        <p>Мы предлагаем опираться на «Organizing a Go module» и использовать <strong>Basic command</strong> и <strong>Server project</strong> там, где это уместно.</p>
+      </div>
+      <p class="prose-muted">Отдельный случай — библиотеки: наборы пакетов, которые дают функциональность просто через импорт (оплата картой, купонами, в рассрочку — как варианты одной библиотеки). У них часто вообще нет <code>main.go</code>: компилировать библиотеку не нужно, нужно лишь взять от неё функционал.</p>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <ul class="source-list">
+      <li><a href="https://www.alexedwards.net/blog/11-tips-for-structuring-your-go-projects"><span class="arrow">↗</span>Eleven tips for structuring your Go projects</a></li>
+      <li><a href="https://go.dev/blog/organizing-go-code"><span class="arrow">↗</span>Organizing Go code</a></li>
+      <li><a href="https://threedots.tech/post/ddd-lite-in-go-introduction/"><span class="arrow">↗</span>Introduction to DDD Lite</a></li>
+      <li><a href="https://threedots.tech/post/introducing-clean-architecture/"><span class="arrow">↗</span>How to implement Clean Architecture in Go</a></li>
+      <li><a href="https://threedots.tech/post/basic-cqrs-in-go/"><span class="arrow">↗</span>How to use basic CQRS in Go</a></li>
+      <li><a href="https://threedots.tech/post/ddd-cqrs-clean-architecture-combined/"><span class="arrow">↗</span>Combining DDD, CQRS, and Clean Architecture in Go</a></li>
+      <li><a href="https://medium.com/@smart_byte_labs/organize-like-a-pro-a-simple-guide-to-go-project-folder-structures-e85e9c1769c2"><span class="arrow">↗</span>Organize Like a Pro: Go Project Folder Structures</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 5 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  function highlightComments(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(/(\/\/.*$|#.*$)/gm, '<span class="tok-c">$1</span>');
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+  document.querySelectorAll("pre.code-bash code").forEach(function(el){ el.innerHTML = highlightComments(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

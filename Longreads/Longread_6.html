@@ -1,0 +1,671 @@
+<title>Танец горутин</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .spec-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:.4rem;}
+  @media (max-width:640px){.spec-grid{grid-template-columns:1fr;}}
+  .spec-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.3rem 1.4rem; box-shadow:var(--shadow);}
+  .spec-card h4{margin-bottom:.9rem; display:flex; align-items:center; gap:.5em;}
+  .spec-card.pro h4{color:var(--accent);}
+  .spec-card.con h4{color:var(--accent-2);}
+  .spec-card ul{display:flex; flex-direction:column; gap:.55rem; list-style:none;}
+  .spec-card li{position:relative; padding-left:1.4em; font-size:.97rem; color:var(--text-muted);}
+  .spec-card.pro li::before{content:"+"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.con li::before{content:"–"; position:absolute; left:0; color:var(--accent-2); font-family:var(--font-mono); font-weight:700;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  /* Timeline: concurrency vs parallelism */
+  .timeline{display:flex; flex-direction:column; gap:.8rem;}
+  .timeline-row{display:flex; align-items:center; gap:.9rem;}
+  .timeline-label{font-family:var(--font-mono); font-size:.78rem; color:var(--text-muted); width:5.5rem; flex-shrink:0;}
+  .timeline-track{flex:1; display:flex; gap:3px; height:1.8rem;}
+  .timeline-seg{flex:1; border-radius:3px; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:.72rem; font-weight:600;}
+  .timeline-seg.a{background:var(--accent); color:var(--code-bg);}
+  .timeline-seg.b{background:var(--accent-2); color:var(--code-bg);}
+
+  /* Buffer visualization */
+  .buffer-viz{display:flex; gap:.5rem; align-items:center;}
+  .buffer-slot{width:2.8rem; height:2.8rem; border-radius:var(--radius-s); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:700;}
+  .buffer-slot.filled{background:var(--accent); color:var(--code-bg);}
+  .buffer-slot.blocked{border:2px dashed var(--accent-2); color:var(--accent-2);}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  footer.sources h3{font-family:var(--font-mono); font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin-top:.4rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 6 из 11</span>
+    <h1 class="title">Танец горутин<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Чем горутины лучше потоков ОС, как модель GMP распределяет их по ядрам, и почему Go советует «не общаться через память, а делиться памятью через общение».</p>
+    <div class="meta-row">
+      <span><b>~22 мин</b> чтения</span>
+      <span><b>5</b> разделов</span>
+      <span>нужны <b>главы 1–5</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#concurrency"><span class="n">01</span>Конкурентность vs параллелизм</a></li>
+        <li><a href="#goroutines"><span class="n">02</span>Горутины</a></li>
+        <li><a href="#scheduler"><span class="n">03</span>Планировщик и GMP</a></li>
+        <li><a href="#channels"><span class="n">04</span>Каналы</a></li>
+        <li><a href="#races"><span class="n">05</span>Гонки данных</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#concurrency"><span class="n">01</span>Конкурентность vs параллелизм</a></li>
+      <li><a href="#goroutines"><span class="n">02</span>Горутины</a></li>
+      <li><a href="#scheduler"><span class="n">03</span>Планировщик и GMP</a></li>
+      <li><a href="#channels"><span class="n">04</span>Каналы</a></li>
+      <li><a href="#races"><span class="n">05</span>Гонки данных</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 Concurrency vs Parallelism -->
+    <section class="section" id="concurrency">
+      <div class="section__head"><span class="section__num">01</span><h2>Конкурентность vs параллелизм</h2></div>
+      <p>В Python конкурентность держится на <code>asyncio</code>, <code>threading</code> и <code>multiprocessing</code> — модулях в обход ограничений языка. В Rust — на прямом создании тредов ОС и сторонних рантаймах вроде <code>Tokio</code>. В Go конкурентная работа реализована прямо под капотом языка — и это выгодно его выделяет.</p>
+      <p><strong>Параллелизм</strong> — несколько задач выполняются буквально одновременно, на разных ядрах, не деля между собой ресурсы одного ядра. Как если бы амбидекстер рисовал картину сразу двумя руками.</p>
+      <p><strong>Конкурентность</strong> — псевдопараллельность: задачи выполняются на одном ядре, которое постоянно переключается между ними, создавая иллюзию одновременности. Как если бы художник без амбидекстрии постоянно перекладывал кисть из руки в руку, работая то одним, то другим оттенком.</p>
+
+      <div class="diagram">
+        <div class="timeline">
+          <div class="timeline-row">
+            <span class="timeline-label">Ядро 1</span>
+            <div class="timeline-track">
+              <div class="timeline-seg a">A</div><div class="timeline-seg a">A</div><div class="timeline-seg a">A</div><div class="timeline-seg a">A</div>
+            </div>
+          </div>
+          <div class="timeline-row">
+            <span class="timeline-label">Ядро 2</span>
+            <div class="timeline-track">
+              <div class="timeline-seg b">B</div><div class="timeline-seg b">B</div><div class="timeline-seg b">B</div><div class="timeline-seg b">B</div>
+            </div>
+          </div>
+        </div>
+        <p class="diagram-caption">Параллелизм: A и B работают буквально в одно и то же время — на разных ядрах</p>
+        <div class="timeline" style="margin-top:1.6rem;">
+          <div class="timeline-row">
+            <span class="timeline-label">Одно ядро</span>
+            <div class="timeline-track">
+              <div class="timeline-seg a">A</div><div class="timeline-seg b">B</div><div class="timeline-seg a">A</div><div class="timeline-seg b">B</div><div class="timeline-seg a">A</div><div class="timeline-seg b">B</div>
+            </div>
+          </div>
+        </div>
+        <p class="diagram-caption">Конкурентность: A и B делят одно ядро, постоянно переключаясь — иллюзия одновременности</p>
+      </div>
+
+      <p class="prose-muted">Конкурентность реализуема и на одном ядре, и на нескольких; параллелизм без нескольких ядер невозможен. Параллелизм — свойство системы; конкурентность — свойство языка.</p>
+      <div class="chips">
+        <span class="chip">быстрее отвечать на запросы</span>
+        <span class="chip">эффективнее использовать ресурсы</span>
+        <span class="chip">отзывчивый интерфейс</span>
+        <span class="chip">много задач одновременно</span>
+      </div>
+      <p class="prose-muted">Всё это Go даёт из коробки — просто, безопасно, благодаря одной изящной абстракции: <strong>горутинам</strong>.</p>
+    </section>
+
+    <!-- 02 Горутины -->
+    <section class="section" id="goroutines">
+      <div class="section__head"><span class="section__num">02</span><h2>Горутины — единицы конкурентности вместо потоков</h2></div>
+      <p>Операционные системы выполняют программы через треды/потоки — но в Go это не единица выполнения. Причина в трёх практических минусах тредов ОС:</p>
+      <ul class="plain">
+        <li>стек треда имеет фиксированный размер (до ~8 МБ) без возможности расти или сжиматься;</li>
+        <li>создание треда — дорогая операция, и много тредов ОС создать физически не может (счёт на тысячи);</li>
+        <li>переключение треда дорого: нужно сохранить состояние текущего, снять с ядра, загрузить состояние нового и запустить.</li>
+      </ul>
+      <p>Поэтому Go спустился на уровень ниже и создал собственные потоки внутри языка — <strong>горутины</strong>. В <a href="https://github.com/golang/go/blob/go1.25.7/src/runtime/runtime2.go#L394">исходном коде</a> это структура; по сути — единица выполнения конкурентной работы в языке.</p>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Характеристика</th><th>Тред ОС</th><th>Горутина</th></tr></thead>
+          <tbody>
+            <tr><td>Стек</td><td>фиксирован, до ~8 МБ</td><td>от 2 КБ, растёт до 1 ГБ (и сжимается обратно)</td></tr>
+            <tr><td>Создание</td><td>дорого, счёт на тысячи</td><td>дёшево, счёт на миллионы</td></tr>
+            <tr><td>Переключение</td><td>дорого, силами ОС</td><td>дёшево, силами языка</td></tr>
+            <tr><td>1000 задач</td><td>≈ 8 ГБ памяти</td><td>≈ 2 МБ памяти в начальном состоянии</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted">Планировщик ОС, распределяющий потоки по ядрам, ощутимо медленнее встроенного планировщика Go. Дополнительная абстракция работает не в <em>kernel-space</em>, а в <em>user-space</em> — и именно на этом Go выигрывает скорость.</p>
+      <p>В коде горутина — это функция или метод, выполняющиеся условно «параллельно» остальным. У любой программы уже есть одна горутина при старте — это <code>main()</code>, выполняющаяся строго последовательно. Как заставить Go создавать больше?</p>
+
+      <h3>Как работать с горутинами</h3>
+      <p>Горутина создаётся ключевым словом <code>go</code> перед вызовом функции — она начинает выполняться независимо и конкурентно с остальными:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func sayHello(name string) {
+	fmt.Printf("Привет, %s!\n", name)
+}
+
+func main() {
+	fmt.Println("Начинаем программу...")
+
+	go sayHello("Анна")  // Запускаем первую горутину
+	go sayHello("Борис") // Запускаем вторую горутину
+
+	fmt.Println("Программа завершена")
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">вывод</span><span class="code-block__lang">stdout</span></div>
+        <pre class="code-bash"><code>Начинаем программу...
+Программа завершена</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// неожиданно?</span>
+        <p><code>go</code> лишь ставит горутину в очередь на выполнение — не гарантирует, что она успеет отработать до завершения <code>main</code>. Добавь <code>time.Sleep()</code> перед последним <code>Println</code> — и увидишь оба приветствия. Спецификация языка <strong>не гарантирует</strong> порядок выполнения горутин.</p>
+      </div>
+      <p>Горутины работают и с анонимными функциями — заодно являясь замыканиями, захватывающими переменные из своей области видимости:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>go func() {
+	fmt.Println("Анна")
+}() // Не забываем () в конце — иначе функция не готова к запуску
+
+go sayHello("Борис")</code></pre>
+      </div>
+      <p class="prose-muted">Горутину даёт функция (анонимная или обычная) или метод, выполняются они в непредсказуемом порядке. А управляет всем этим — <strong>планировщик</strong>.</p>
+    </section>
+
+    <!-- 03 Планировщик -->
+    <section class="section" id="scheduler">
+      <div class="section__head"><span class="section__num">03</span><h2>Планировщик и модель GMP</h2></div>
+      <p><strong>Планировщик</strong> (scheduler, «шедулер») — механизм, управляющий очерёдностью, временем и ресурсами для выполнения задач. Полагаться на планировщик ОС Go не мог по двум причинам: язык кросс-компилируемый и не может привязываться к конкретной ОС, а планировщик ОС попросту не знает о существовании горутин — только о потоках, и заточен под совсем другую задачу: распределение времени ЦПУ между разными программами системы.</p>
+      <p>Раз в языке появилась своя абстракция — управлять ей должен планировщик самого языка. Автор планировщика Go — наш соотечественник, Дмитрий Вьюков.</p>
+
+      <div class="callout callout-note">
+        <span class="callout-tag">// принцип M : N</span>
+        <p>Произвольное количество горутин (M) выполняется на произвольном количестве потоков ОС (N). Планировщик Go не управляет самими потоками напрямую — он не знает, когда поток реально исполняется на ядре, но пока тот на ядре, успевает прогнать через него несколько горутин конкурентно.</p>
+      </div>
+
+      <p>Модель называется <strong>GMP</strong> — goroutine, processor, machine:</p>
+      <dl class="glossary">
+        <div><dt>G — Goroutine</dt><dd>сама горутина: стек, состояние выполнения (регистры, счётчик), статус (пауза, выполнение, готовность).</dd></div>
+        <div><dt>P — Processor</dt><dd>виртуальный процессор — якорь для горутин; количество P не превышает числа физических ядер (но может быть меньше). У каждого P своя локальная очередь горутин, до 256 штук: они попадают туда из глобальной очереди, у соседних P (через work stealing) или рождаются прямо в текущей выполняемой горутине.</dd></div>
+        <div><dt>M — Machine</dt><dd>абстракция треда ОС. Именно M выполняет горутины, прикрепляясь к конкретному P. При тяжёлой блокирующей операции (например, сетевой вызов) M открепляется от P и продолжает жить с потоком ОС, а планировщик просит у ОС новый M для освободившегося P.</dd></div>
+      </dl>
+      <p class="prose-muted">Ещё есть <strong>GRQ</strong> — глобальная очередь горутин, не попавших ни в один P. Каждый P периодически туда заглядывает, чтобы забрать себе пачку работы.</p>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TB
+  GRQ["GRQ — глобальная очередь"]
+  subgraph P1["P1"]
+    LQ1["локальная очередь
+до 256 G"]
+  end
+  subgraph P2["P2"]
+    LQ2["локальная очередь"]
+  end
+  M1["M1 — поток ОС"] --- P1
+  M2["M2 — поток ОС"] --- P2
+  GRQ -.->|"пачкой, время от времени"| LQ1
+  GRQ -.->|"пачкой, время от времени"| LQ2
+  LQ2 -.->|"work stealing:
+крадёт половину, когда своя очередь пуста"| LQ1
+  LQ1 --> EXEC["G выполняется на M1"]
+        </pre>
+        <p class="diagram-caption">P жонглирует своими G, M выполняет их на потоке ОС, GRQ и work stealing балансируют нагрузку между P</p>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  A["go func()
+создание"] --> B["в очереди
+локальной / глобальной"]
+  B --> C["выполнение на M"]
+  C --> D["временная остановка"] --> B
+  C --> E["блокировка на I/O"] --> F["возобновление"] --> B
+  C --> G["завершение работы"]
+        </pre>
+        <p class="diagram-caption">Жизненный цикл горутины — все промежуточные состояния могут чередоваться сколько угодно раз</p>
+      </div>
+
+      <h3>Основные механизмы планировщика</h3>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Work stealing.</strong> Когда локальная очередь P опустела, он лезет к случайному соседнему P и, если там есть свободные G, крадёт себе половину — так работа P не прерывается впустую.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Sysmon.</strong> Отдельная горутина, стартующая вместе с планировщиком. Периодически проверяет заблокированные M, запускает сборщик мусора и вытесняет горутины, которые слишком долго не отдают управление.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Network Poller.</strong> Ещё одна отдельная горутина — опрашивает сетевые соединения через epoll/kqueue/IOCP и возвращает горутины в готовность, как только соединение готово.</p></div>
+      </div>
+
+      <h3>Параллелизм через GOMAXPROCS</h3>
+      <p>Переменная <code>GOMAXPROCS</code> задаёт максимальное число P для программы — тем самым определяя, сколько ядер ей реально доступно:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	// Только одно ядро — чистый конкурентный код
+	runtime.GOMAXPROCS(1)
+
+	// Все доступные ядра (по умолчанию, начиная с Go 1.5).
+	// Если ядер больше двух, код и конкурентный, и параллельный одновременно
+	runtime.GOMAXPROCS(runtime.NumCPU())
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 04 Каналы -->
+    <section class="section" id="channels">
+      <div class="section__head"><span class="section__num">04</span><h2>Каналы между горутинами</h2></div>
+      <p>Как синхронизировать горутины между собой? Через <strong>каналы</strong> — потокобезопасный тип, ключевой инструмент конкурентного Go. Каналы реализуют <em>message passing</em>: горутины не лезут напрямую в общие данные (<em>memory sharing</em>), а координируются, передавая сообщения по каналу в порядке <strong>FIFO</strong>. Под капотом канал — тоже структура (<a href="https://github.com/golang/go/blob/go1.25.7/src/runtime/chan.go#L34">исходник</a>), тут без сюрпризов.</p>
+
+      <p>Канал объявляется через <code>make</code> — буферизированным или небуферизированным (число после запятой в типе):</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>ch := make(chan int)     // Небуферизированный
+buf := make(chan int, 3) // Буферизированный на 3 элемента</code></pre>
+      </div>
+      <p class="prose-muted">Небуферизированный канал синхронный: отправитель блокируется, пока получатель не будет готов принять (и наоборот). Буферизированный — асинхронный до заполнения буфера: внутри кольцевой буфер на N элементов, и обе стороны не блокируются, пока в нём есть место.</p>
+
+      <div class="diagram">
+        <pre class="mermaid">
+sequenceDiagram
+  participant G1 as Горутина 1 (отправитель)
+  participant CH as ch (небуферизированный)
+  participant G2 as Горутина 2 (получатель)
+  G1->>CH: ch <- 42
+  Note over G1,CH: заблокирована — ждёт получателя
+  G2->>CH: value := <-ch
+  CH-->>G1: разблокирована
+  CH-->>G2: получено 42
+        </pre>
+        <p class="diagram-caption">Небуферизированный канал — это рукопожатие: обе стороны ждут друг друга</p>
+      </div>
+
+      <div class="diagram">
+        <div class="buffer-viz">
+          <div class="buffer-slot filled">1</div>
+          <div class="buffer-slot filled">2</div>
+          <div class="buffer-slot filled">3</div>
+          <div class="buffer-slot blocked">4</div>
+        </div>
+        <p class="diagram-caption">Буфер на 3 занят целиком — четвёртая отправка блокируется, пока кто-то не прочитает</p>
+      </div>
+
+      <p class="prose-muted">Чёткого правила «когда буфер, когда нет» не существует — обычно стоит начать с небуферизированного канала, и добавлять буфер только если блокировки заметно тормозят код. Оператор <code>&lt;-</code> и читает, и пишет в канал, в зависимости от позиции.</p>
+
+      <h3>Работа с каналами</h3>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Чтение из канала в цикле
+for {
+	val, ok := <-ch // Второй параметр — признак закрытия канала
+	if !ok {
+		break
+	}
+	fmt.Println(val)
+}
+
+// Запись в канал в цикле
+for range n {
+	ch <- n
+}
+close(ch) // Закрываем канал после записи</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// важное правило</span>
+        <p>Канал закрывает та горутина, которая в него <strong>пишет</strong> — только она понимает, когда его жизненный цикл завершён. Заводя канал, сразу планируй, где и когда закроешь его.</p>
+      </div>
+      <p class="prose-muted">Не проверяя закрытие, читающая горутина продолжит получать <code>zero value</code> типа канала бесконечно. Исключение — <code>for range</code> по каналу: он сам следит за закрытием и завершает цикл:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>for val := range ch {
+	fmt.Println(val)
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// осторожно</span>
+        <p>Из закрытого канала читать можно. А вот запись в закрытый канал, как и его повторное закрытие, — гарантированная паника. Для закрытия удобно использовать <code>defer</code>.</p>
+      </div>
+
+      <p>Каналы бывают <strong>направленными</strong> — только на запись или только на чтение. Это безопасность на этапе компиляции, чёткость контракта функции и более читаемый код. Из двунаправленного в направленный конвертировать можно, обратно — нет:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var bidirectional chan int = make(chan int)
+var sendOnly chan<- int = bidirectional    // OK
+var receiveOnly <-chan int = bidirectional // OK
+// var bidir2 chan int = sendOnly          // Ошибка компиляции
+
+func producer(dataChan chan<- string) {} // Только отправка</code></pre>
+      </div>
+
+      <h3>Мультиплексирование каналов</h3>
+      <p>Когда каналов несколько, за ними следит конструкция <code>select case</code> — как <code>switch</code>, но только для каналов, и умеет ждать сразу несколько операций одновременно. В отличие от <code>switch</code>, кейсы <code>select</code> проверяются не по порядку, а рандомно, а <code>default</code> срабатывает, если ни один канал не готов прямо сейчас:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>for {
+	select {
+	case msg1 := <-ch1:
+		fmt.Printf("Получено из канала 1: %s\n", msg1)
+	case msg2 := <-ch2:
+		fmt.Printf("Получено из канала 2: %d\n", msg2)
+	case <-timeout:
+		fmt.Println("Таймаут!")
+		return
+	default:
+		fmt.Println("Ни один канал не готов, делаем другую работу...")
+		time.Sleep(1 * time.Second)
+	}
+}</code></pre>
+      </div>
+
+      <h3>nil-каналы и deadlock</h3>
+      <p class="prose-muted"><code>nil</code>-канал — объявленный, но не инициализированный: все операции с ним блокируются навсегда, а закрытие — паника. Пригождается это неожиданно часто: превратив рабочий канал в <code>nil</code>, можно заставить <code>select</code> временно игнорировать его <code>case</code>, динамически включая и выключая каналы.</p>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// deadlock</span>
+        <p><strong>Deadlock</strong> — все горутины программы ждут событий, которые никогда не случатся. Рантайм Go умеет это ловить сам и падает с <code>fatal error: all goroutines are asleep - deadlock!</code></p>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func channelDeadlock() {
+	ch := make(chan int)
+
+	ch <- 42 // Нет получателя — заблокирует навсегда
+
+	fmt.Println("Эта строка никогда не выполнится")
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// мантра Go</span>
+        <p><a href="https://www.youtube.com/watch?v=PAAkCSZUG1c&t=2m48s">«Не общайтесь через общую память — делитесь памятью через общение»</a>. Каналы почти всегда предпочтительнее остальных механизмов синхронизации.</p>
+      </div>
+    </section>
+
+    <!-- 05 Гонки данных -->
+    <section class="section" id="races">
+      <div class="section__head"><span class="section__num">05</span><h2>Гонки данных и гонки состояний</h2></div>
+      <p><strong>Race condition</strong> — гонка состояний: результат зависит от непредсказуемого порядка выполнения горутин при одновременном доступе к общим данным. Частный, более узкий случай — <strong>data race</strong>: несколько горутин одновременно обращаются к памяти, и хотя бы одна из них пишет. Консистентность данных при этом нарушается.</p>
+      <p class="prose-muted">Мапы в Go конкурентно небезопасны намеренно жёстко: при одновременном доступе программа сама впадает в панику, чтобы проблему нельзя было не заметить. А вот обычный <code>data race</code> так себя не выдаёт:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Небезопасный инкремент
+func simpleRaceCondition() {
+	counter := 0
+
+	go func() { counter = 1 }()
+	go func() { counter = 100 }()
+
+	time.Sleep(1 * time.Second)
+
+	fmt.Printf("Результат: %d\n", counter)
+	// Результат непредсказуем: 1 или 100
+}</code></pre>
+      </div>
+      <div class="chips">
+        <span class="chip">непредсказуемые результаты</span>
+        <span class="chip">повреждение данных</span>
+        <span class="chip">паника</span>
+        <span class="chip">сложная отладка</span>
+      </div>
+
+      <h3>Отслеживание гонок</h3>
+      <p>Go даёт встроенный детектор гонок — достаточно одного флага:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code># Запуск программы с детектором
+go run -race main.go
+
+# Запуск тестов с детектором
+go test -race ./...
+
+# Сборка с детектором
+go build -race main.go</code></pre>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <h3>Видео</h3>
+    <ul class="source-list">
+      <li><a href="https://www.youtube.com/watch?v=RlM9AfWf1WU"><span class="arrow">↗</span>Concurrency Vs Parallelism!</a></li>
+      <li><a href="https://www.youtube.com/watch?v=-K11rY57K7k"><span class="arrow">↗</span>Дмитрий Вьюков — Go scheduler</a></li>
+      <li><a href="https://www.youtube.com/watch?v=wQpC99Xu1U4"><span class="arrow">↗</span>GopherCon 2021 — Queues, Fairness, and the Go Scheduler</a></li>
+      <li><a href="https://www.youtube.com/watch?v=YHRO5WQGh0k"><span class="arrow">↗</span>GopherCon 2018 — The Scheduler Saga</a></li>
+      <li><a href="https://www.youtube.com/watch?v=1I1WmeSjRSw"><span class="arrow">↗</span>GopherCon 2020 — Loop Preemption in Go 1.14</a></li>
+      <li><a href="https://www.youtube.com/watch?v=P2Tzdg8n9hw"><span class="arrow">↗</span>«Секреты внутреннего устройства планировщика Go»</a></li>
+      <li><a href="https://www.youtube.com/watch?v=ZTJcaP4G4JM"><span class="arrow">↗</span>«Как на самом деле устроены каналы в Golang?»</a></li>
+    </ul>
+    <h3>Статьи</h3>
+    <ul class="source-list">
+      <li><a href="https://go.dev/blog/waza-talk"><span class="arrow">↗</span>«Конкурентность — не параллелизм»</a></li>
+      <li><a href="https://habr.com/ru/companies/oleg-bunin/articles/522742/"><span class="arrow">↗</span>Go Channels Internals</a></li>
+      <li><a href="https://medium.com/@genchilu/if-a-goroutine-call-a-new-goroutine-which-one-would-scheduler-pick-up-first-890002dc54f8"><span class="arrow">↗</span>If a goroutine calls a new goroutine</a></li>
+      <li><a href="https://medium.com/a-journey-with-go/go-how-does-the-goroutine-stack-size-evolve-447fc02085e5"><span class="arrow">↗</span>How does the goroutine stack size evolve</a></li>
+      <li><a href="https://medium.com/a-journey-with-go/go-how-does-go-recycle-goroutines-f047a79ab352"><span class="arrow">↗</span>How does Go recycle goroutines</a></li>
+      <li><a href="https://habr.com/ru/articles/891426/"><span class="arrow">↗</span>«Планировщик Go — самый подробный гайд»</a></li>
+      <li><a href="https://habr.com/ru/companies/first/articles/581158/"><span class="arrow">↗</span>«Лезем в сорцы компилятора» — часть I</a></li>
+      <li><a href="https://habr.com/ru/companies/first/articles/582144/"><span class="arrow">↗</span>«Лезем в сорцы компилятора» — часть II</a></li>
+      <li><a href="https://rakyll.org/scheduler/"><span class="arrow">↗</span>Stealing scheduler</a></li>
+      <li><a href="https://docs.google.com/document/d/1wAaf1rYoM4S4gtnPh0zOlGzWtrZFQ5suE8qr2sD8uWQ/pub"><span class="arrow">↗</span>«Непрерывный стек горутины»</a></li>
+      <li><a href="https://medium.com/a-journey-with-go/go-goroutine-os-thread-and-cpu-management-2f5a5eaf518a"><span class="arrow">↗</span>OS, thread and CPU management</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 6 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  function highlightComments(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(/(\/\/.*$|#.*$)/gm, '<span class="tok-c">$1</span>');
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+  document.querySelectorAll("pre.code-bash code").forEach(function(el){ el.innerHTML = highlightComments(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

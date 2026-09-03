@@ -1,0 +1,854 @@
+<title>Анатомия слайса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .spec-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:.4rem;}
+  @media (max-width:640px){.spec-grid{grid-template-columns:1fr;}}
+  .spec-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.3rem 1.4rem; box-shadow:var(--shadow);}
+  .spec-card h4{margin-bottom:.9rem; display:flex; align-items:center; gap:.5em;}
+  .spec-card.pro h4{color:var(--accent);}
+  .spec-card.con h4{color:var(--accent-2);}
+  .spec-card.neutral h4{color:var(--accent);}
+  .spec-card ul{display:flex; flex-direction:column; gap:.55rem; list-style:none;}
+  .spec-card li{position:relative; padding-left:1.4em; font-size:.97rem; color:var(--text-muted);}
+  .spec-card.pro li::before{content:"+"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.con li::before{content:"–"; position:absolute; left:0; color:var(--accent-2); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.neutral li::before{content:"›"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table caption{text-align:left; padding:.7rem 1rem; font-family:var(--font-body); font-style:italic; color:var(--text-faint); font-size:.85rem; border-bottom:1px solid var(--border);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+  table.data-table td.yes{color:var(--accent); font-weight:600;}
+  table.data-table td.no{color:var(--text-faint);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  .op-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;}
+  @media (max-width:760px){.op-grid{grid-template-columns:1fr;}}
+  .op-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.2rem 1.3rem; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:.7rem;}
+  .op-card .op-symbol{font-family:var(--font-mono); font-size:1.4rem; color:var(--accent);}
+  .op-card p{font-size:.9rem; color:var(--text-muted); max-width:none;}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  footer.sources h3{font-family:var(--font-mono); font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin-top:.4rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 2 из 11</span>
+    <h1 class="title">Анатомия слайса<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Массивы, слайсы, мапы и указатели — не просто «как пользоваться», а что в этот момент происходит в памяти. С заходом в исходный код рантайма Go.</p>
+    <div class="meta-row">
+      <span><b>~20 мин</b> чтения</span>
+      <span><b>5</b> разделов</span>
+      <span>нужна <b>глава 1</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#arrays"><span class="n">01</span>Массивы</a></li>
+        <li><a href="#slices"><span class="n">02</span>Слайсы</a></li>
+        <li><a href="#maps"><span class="n">03</span>Мапы</a></li>
+        <li><a href="#pointers"><span class="n">04</span>Указатели</a></li>
+        <li><a href="#ref-types"><span class="n">05</span>Неявные указатели</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#arrays"><span class="n">01</span>Массивы</a></li>
+      <li><a href="#slices"><span class="n">02</span>Слайсы</a></li>
+      <li><a href="#maps"><span class="n">03</span>Мапы</a></li>
+      <li><a href="#pointers"><span class="n">04</span>Указатели</a></li>
+      <li><a href="#ref-types"><span class="n">05</span>Неявные указатели</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 Массивы -->
+    <section class="section" id="arrays">
+      <div class="section__head"><span class="section__num">01</span><h2>Массивы</h2></div>
+      <p><strong>Массив</strong> в Go — контейнер фиксированного размера, хранящий элементы одного типа. В памяти это последовательная область ячеек, в которых лежат значения.</p>
+      <p>Размер массива задаётся при объявлении и становится частью типа. Массивы разной длины — это разные типы: массив сам по себе сравниваемый (к нему применимы <code>==</code> и <code>!=</code>), но сравнить между собой массивы разной длины не получится:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var numbers3 [3]int  // Массив из трёх целых чисел
+var numbers5 [5]int  // Массив из пяти целых чисел
+
+numbers3 == numbers5 // Ошибка компиляции: разные типы</code></pre>
+      </div>
+      <p class="prose-muted">По той же причине массив одной длины нельзя привести к типу массива другой длины, а длина не может быть переменной — раз она часть типа, компилятор обязан знать её на этапе компиляции.</p>
+      <p>При объявлении через <code>var</code> массив заполняется <code>zero value</code> своего типа — ровно столько раз, сколько указано в квадратных скобках:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var temperatures [7]float64  // Семь температур на неделю
+var scores [5]string         // Пять оценок студента
+
+fmt.Println(temperatures)   // [0 0 0 0 0 0 0] — нулевые значения для float64
+fmt.Println(scores)         // ["" "" "" "" ""] — нулевые значения для string</code></pre>
+      </div>
+      <p>Есть и другие способы: инициализировать все значения сразу, частично, либо создать разреженный массив, назначив значения по конкретным индексам:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Все значения сразу
+weekdays := [7]string{
+	"Понедельник", "Вторник", "Среда", "Четверг",
+	"Пятница", "Суббота", "Воскресенье",
+}
+
+// Частичная инициализация
+grades := [5]int{95, 87, 92} // [95 87 92 0 0] — остальные нули
+
+// Разреженный массив
+scores := [4]int{1, 2: 14} // [1 0 14 0] — по индексу 2 (с нуля) стоит 14</code></pre>
+      </div>
+      <p class="prose-muted">Длину можно и не указывать вовсе — тогда вместо числа ставится троеточие, и компилятор сам вычисляет длину массива по количеству элементов:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>months := [...]string{
+	"Январь", "Февраль", "Март", "Апрель",
+	"Май", "Июнь", "Июль", "Август",
+	"Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+}</code></pre>
+      </div>
+
+      <h3>Длина и ёмкость массива</h3>
+      <ul class="plain">
+        <li><code>len</code> — возвращает длину: количество элементов, которые тип реально в себе содержит;</li>
+        <li><code>cap</code> — возвращает ёмкость: максимум элементов, под которые уже выделена память.</li>
+      </ul>
+      <p class="prose-muted">У массива по его природе всегда <code>len(x) == cap(x)</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>cities := [5]string{"Москва", "Долгопрудный"}
+fmt.Println(len(cities)) // 5
+fmt.Println(cap(cities)) // 5</code></pre>
+      </div>
+
+      <h3>Работа с массивом</h3>
+      <p>Массивы разных типов не взаимодействуют, но значения между массивами одного типа копируются — и переменные становятся полностью независимыми друг от друга:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>a := [3]int{1, 2, 3}
+b := a
+b[0] = 99
+fmt.Println(a) // [1 2 3]
+fmt.Println(b) // [99 2 3]</code></pre>
+      </div>
+      <p>Доступ к отдельным значениям — через <strong>индексы</strong>, порядковые номера с отсчётом от <code>0</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>cities := [3]string{"Москва", "СПб", "Казань"}
+
+fmt.Println("Первый город:", cities[0]) // Москва
+fmt.Println("Второй город:", cities[1]) // СПб
+fmt.Println("Третий город:", cities[2]) // Казань
+
+cities[1] = "Санкт-Петербург"
+fmt.Println(cities) // [Москва Санкт-Петербург Казань]</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// runtime panic</span>
+        <p>Индекс за пределами длины массива — гарантированная паника:</p>
+        <pre class="code-go" style="background:transparent;padding:0;margin-top:.3rem;"><code>fmt.Println(cities[5]) // panic: runtime error: index out of range [5] with length 3</code></pre>
+      </div>
+      <p>Массив — составной тип, поэтому по нему можно пройтись циклом. Классический вариант — счётчик от <code>0</code> до <code>len(x)-1</code> (<a href="https://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD831.html">почему нумерация должна начинаться с нуля</a>):</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>prices := [4]float64{19.99, 25.50, 12.30, 45.00}
+
+for i := 0; i < len(prices); i++ {
+	fmt.Printf("Товар %d стоит %.2f руб.\n", i+1, prices[i])
+}</code></pre>
+      </div>
+      <p class="prose-muted">Опасность этого способа — легко указать неверную границу и словить ошибку в рантайме. Более идиоматичный путь — <code>for-range</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>fruits := [4]string{"яблоко", "банан", "апельсин", "груша"}
+
+// С индексом и значением
+for index, fruit := range fruits {
+	fmt.Printf("%d. %s\n", index+1, fruit)
+}
+
+// Только значения
+for _, fruit := range fruits {
+	fmt.Println("Фрукт:", fruit)
+}
+
+// Только индексы
+for index := range fruits {
+	fmt.Printf("Индекс %d\n", index)
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// осторожно</span>
+        <p><code>_</code> — пустой идентификатор, говорящий компилятору игнорировать значение. Переменные цикла — это <strong>копии</strong> значений массива: их изменение не затронет сам массив. Чтобы изменить массив, всегда обращайся по индексу.</p>
+      </div>
+
+      <h3>Ограничения массивов</h3>
+      <ul class="plain">
+        <li><strong>Фиксированный размер</strong> — изменить его после объявления нельзя;</li>
+        <li><strong>Размер — часть типа</strong> — <code>[10]int</code> и <code>[20]int</code> несовместимы;</li>
+        <li><strong>Копирование при передаче</strong> — дорого для больших массивов.</li>
+      </ul>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func processNumbers(numbers [100]int) { // Что, если нужно 200 чисел?
+	// Обработка 100 чисел
+}
+
+func processMoreNumbers(numbers [200]int) { // Другая функция!
+	// Обработка 200 чисел
+}
+// Нужны две разные функции для разных размеров массивов!</code></pre>
+      </div>
+      <p class="prose-muted">Именно поэтому массивы в Go редко применяются в чистом виде — их место занимают слайсы.</p>
+    </section>
+
+    <!-- 02 Слайсы -->
+    <section class="section" id="slices">
+      <div class="section__head"><span class="section__num">02</span><h2>Слайсы: гибкая альтернатива массивам</h2></div>
+      <p>На первый взгляд <strong>слайсы</strong> (срезы) очень похожи на массивы: создаются почти так же, обращение по индексу такое же, итерируются одинаково, а выход за границы так же приводит к ошибке. Но за этим сходством прячутся четыре серьёзных отличия.</p>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  subgraph SL["Слайс — это структура"]
+    direction TB
+    P["array → указатель"]
+    L["len → длина"]
+    C["cap → ёмкость"]
+  end
+  SL -- "указывает на" --> ARR["Базовый массив в памяти
+[ x | x | x | x | x | x ]"]
+        </pre>
+        <p class="diagram-caption">Слайс не хранит данные сам — он лишь указатель + длина + ёмкость поверх настоящего массива</p>
+      </div>
+
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">№1</span><p><strong>Динамический размер.</strong> Слайс не имеет длины как части типа и объявляется без числа в скобках. Необъявленный слайс не инициализирован — его значение <code>nil</code>, память под него не выделена.</p></div>
+        <div class="diff-item"><span class="diff-num">№2</span><p><strong>Надстройка над массивом.</strong> Под капотом слайс — структура из указателя на первый элемент, длины и ёмкости. Сами данные лежат в базовом массиве, на который слайс лишь ссылается.</p></div>
+        <div class="diff-item"><span class="diff-num">№3</span><p><strong>Несравниваемый тип.</strong> В отличие от массива, слайс нельзя сравнить с чем-либо через <code>==</code> и <code>!=</code>.</p></div>
+        <div class="diff-item"><span class="diff-num">№4</span><p><strong>Реслайс.</strong> Массив остаётся массивом, а срез можно взять и от массива, и от другого слайса — не создавая новый базовый массив, а лишь переопределяя, что именно считать базовым массивом.</p></div>
+      </div>
+
+      <p>Пустой слайс с реальной (но пустой) инициализацией создаётся так:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var numbers []int  // nil-слайс, память не выделена
+var names []string
+
+empty := []int{}   // реально пустой, но инициализированный слайс</code></pre>
+      </div>
+      <p>Для слайсов появляется идиоматичный способ создания — встроенная функция <code>make</code>. Она принимает тип, длину и (опционально) ёмкость:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// make([]T, length) — слайс заданной длины
+numbers := make([]int, 5) // [0 0 0 0 0], len=5, cap=5
+
+// make([]T, length, capacity) — длина + резерв ёмкости
+buffer := make([]int, 0, 10) // [], len=0, cap=10
+
+fmt.Printf("numbers: len=%d, cap=%d, %v\n", len(numbers), cap(numbers), numbers)
+// numbers: len=5, cap=5, [0 0 0 0 0]
+fmt.Printf("buffer: len=%d, cap=%d, %v\n", len(buffer), cap(buffer), buffer)
+// buffer: len=0, cap=10, []</code></pre>
+      </div>
+      <p class="prose-muted">Для слайса <code>len</code> и <code>cap</code> работают иначе, чем для массива: <code>len</code> — сколько элементов реально заполнено, <code>cap</code> — сколько всего зарезервировано (заполненные + свободные).</p>
+
+      <p>Раз слайс динамический, его можно наращивать через встроенную функцию <code>append</code>. Первый аргумент — исходный слайс, дальше — произвольное количество добавляемых элементов:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var shopping []string
+fmt.Println("Список покупок:", shopping) // []
+
+shopping = append(shopping, "хлеб")
+fmt.Println("Добавили хлеб:", shopping) // [хлеб]
+
+shopping = append(shopping, "молоко", "яйца")
+fmt.Println("Добавили еще:", shopping) // [хлеб молоко яйца]</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// частая ошибка</span>
+        <p><code>append</code> возвращает <strong>новый</strong> слайс — результат обязательно нужно присваивать обратно той же переменной.</p>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TD
+  A["append(slice, x)"] --> B{"len == cap ?"}
+  B -- "нет, есть место" --> C["дописываем элемент
+на месте, len++"]
+  B -- "да, места нет" --> D["выделяем новый
+массив побольше"]
+  D --> E["копируем старые
+элементы + новый"]
+  E --> F["старый массив
+уходит в GC"]
+        </pre>
+        <p class="diagram-caption">Ровно поэтому результат <code>append</code> нужно переприсваивать: слайс может «переехать» в новую область памяти</p>
+      </div>
+
+      <p class="prose-muted">На сколько именно слайс растёт во втором случае — решает <em>growSlice</em> в рантайме (<a href="https://github.com/golang/go/blob/go1.25.6/src/runtime/slice.go#L177">исходник на GitHub</a>): он выделяет с запасом, чтобы не дёргать аллокатор на каждый чих. Конкретное новое значение ёмкости подбирает <em>nextslicecap</em> (<a href="https://github.com/golang/go/blob/go1.25.6/src/runtime/slice.go#L289">исходник</a>). Алгоритм меняется от версии к версии — знать о нём стоит, но полагаться на конкретные цифры не стоит.</p>
+
+      <div class="callout callout-note">
+        <span class="callout-tag">// под капотом</span>
+        <p>Упрощённая структура слайса в рантайме Go (<a href="https://github.com/golang/go/blob/go1.25.6/src/runtime/slice.go#L15">исходник</a>):</p>
+        <pre class="code-go" style="background:transparent;padding:0;margin-top:.3rem;"><code>type slice struct {
+	array unsafe.Pointer // Указатель на первый элемент
+	len   int            // Длина
+	cap   int            // Ёмкость
+}</code></pre>
+        <p>Когда элементов становится больше <code>cap</code>, создаётся новый массив в новой области памяти, данные переносятся туда, а старый массив удаляется.</p>
+      </div>
+
+      <p>Взять срез можно и от массива, и от слайса — процесс называется <strong>реслайсом</strong>. В примере ниже первым элементом специально добавлена пустая строка, чтобы индекс совпадал с порядковым номером месяца:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>months := [12 + 1]string{
+	"", "January", "February", "March", "April", "May", "June",
+	"July", "August", "September", "October", "November", "December",
+}
+
+var (
+	allMonths  = months[:]       // Все элементы
+	firstHalf  = months[1 : 6+1] // Первые 6 месяцев
+	secondHalf = months[7:]      // Последние 6 месяцев
+	summer     = months[6 : 8+1] // Июнь, июль, август
+)
+fmt.Println("Лето:", summer) // [June July August]</code></pre>
+      </div>
+      <p class="prose-muted">Синтаксис <code>[start:end]</code> означает «с индекса <code>start</code> до <code>end</code>, не включая <code>end</code>»; опущенный <code>start</code> — с начала, опущенный <code>end</code> — до конца. Все эти слайсы смотрят на <strong>один и тот же</strong> базовый массив — а значит, делят и часть его элементов.</p>
+
+      <p>Есть и расширенный синтаксис <code>[start:end:maxCap]</code>, где <code>maxCap</code> ограничивает ёмкость нового базового массива: <code>newCap = maxCap - start</code>. Без <code>maxCap</code> ёмкость считается как <code>len(slice/array) - start</code>.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>summer[0] = "ИЮНЬ"                              // Изменяем слайс
+fmt.Println("Исходный массив:", months[6])      // ИЮНЬ — массив изменился!
+fmt.Println("Первая половина:", firstHalf[6-1]) // ИЮНЬ — и тут изменилось!</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// ссылочная семантика</span>
+        <p>Изменение элемента через один слайс видно во всех остальных слайсах на тот же базовый массив: слайс лишь <em>указывает</em> на данные, а не копирует их. Здесь же наглядно видно, что такое <code>cap</code> — это длина от первого элемента слайса до конца базового массива.</p>
+      </div>
+
+      <h3>Ещё важное о слайсах</h3>
+      <p>Чтобы получить по-настоящему независимую копию, есть встроенная функция <code>copy</code> — не нужно вручную гонять цикл:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func copyExample() {
+	original := []string{"a", "b", "c", "d", "e"}
+
+	destination := make([]string, len(original))
+	n := copy(destination, original)
+	fmt.Printf("Скопировано %d элементов\n", n) // 5
+
+	destination[0] = "MODIFIED"
+
+	fmt.Println("Оригинал:", original)    // [a b c d e]
+	fmt.Println("Копия:   ", destination) // [MODIFIED b c d e]
+}</code></pre>
+      </div>
+      <p class="prose-muted"><code>copy</code> безопасно копирует <code>min(len(src), len(dst))</code> элементов — ровно столько, сколько влезет в приёмник.</p>
+
+      <p>Функции удаления элемента в Go нет — но её легко собрать через «склейку» частей слайса с помощью <code>append</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func removeElement(slice []string, index int) []string {
+	// Объединяем части до и после удаляемого элемента
+	return append(slice[:index], slice[index+1:]...)
+}
+
+func main() {
+	fruits := []string{"яблоко", "банан", "апельсин", "груша", "киви"}
+	fruits = removeElement(fruits, 2) // удаляем "апельсин"
+	fmt.Println("После удаления:", fruits) // [яблоко банан груша киви]
+}</code></pre>
+      </div>
+      <dl class="glossary">
+        <div><dt>slice[:index]</dt><dd>все элементы до удаляемого, не включая его.</dd></div>
+        <div><dt>slice[index+1:]</dt><dd>все элементы после удаляемого.</dd></div>
+        <div><dt>append(...)</dt><dd>склеивает эти две части в одну.</dd></div>
+      </dl>
+      <p class="prose-muted">Оператор <code>...</code> распаковывает слайс в вариадический параметр — «раскрывает» его для рантайма поэлементно. Многое из необходимого для слайсов уже есть в пакете стандартной библиотеки <code>slices</code> (<a href="https://github.com/golang/go/tree/master/src/slices">исходник на GitHub</a>) — стоит изучить его самостоятельно.</p>
+
+      <h3>Немного о nil</h3>
+      <p><code>nil</code> — специальное нулевое значение для <em>ссылочных типов</em>: «ничего», «пустой указатель», «несуществующее значение». Мы вернёмся к этой концепции подробнее, когда доберёмся до указателей и интерфейсов. Слайс со значением <code>nil</code> имеет <code>len</code> и <code>cap</code>, равные <code>0</code>, и его тоже можно передавать в <code>append</code>.</p>
+    </section>
+
+    <!-- 03 Мапы -->
+    <section class="section" id="maps">
+      <div class="section__head"><span class="section__num">03</span><h2>Мапы: встроенные хеш-таблицы</h2></div>
+      <p>Мапа — ещё один встроенный составной тип для хранения ассоциативных данных «ключ — значение», где оба могут быть разных типов. Единственное ограничение: ключи обязаны быть сравниваемыми.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var m map[int]string</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// важно</span>
+        <p>Такая мапа объявлена, но <strong>не инициализирована</strong> — её значение <code>nil</code>, и попытка записи в неё завершится ошибкой.</p>
+      </div>
+
+      <h3>Сравниваемые типы</h3>
+      <p>Сравниваемые переменные можно сопоставлять через <code>==</code> и <code>!=</code>, если сравниваемы их типы. Из уже известных нам типов сравниваемы (и годятся в ключи мапы):</p>
+      <div class="chips">
+        <span class="chip">bool</span><span class="chip">string</span>
+        <span class="chip">int / int8 / int16 / int32 / int64</span>
+        <span class="chip">uint / uint8 / uint16 / uint32 / uint64 / uintptr</span>
+        <span class="chip">float32 / float64</span>
+        <span class="chip">complex64 / complex128</span>
+        <span class="chip">массивы</span>
+      </div>
+      <p class="prose-muted">Несравниваемы: слайсы и мапы. К обеим группам мы ещё вернёмся по ходу курса.</p>
+
+      <h3>Работа с мапами</h3>
+      <p>Инициализировать мапу можно двумя способами: через <code>make</code> (пустую или сразу с резервом ёмкости) либо заполнив её значениями прямо при объявлении:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>m1 := make(map[int]bool)     // Пустая инициализированная мапа
+m2 := make(map[bool]int, 10) // С резервом на 10 значений
+m3 := map[float32]bool{1.2: true, 1.5: false} // С фактическими значениями</code></pre>
+      </div>
+      <p>Чтение и запись — обращением по ключу, удаление — через <code>delete</code>. А что если нужно узнать, есть ли ключ вообще? Запрос несуществующего ключа тихо вернёт <code>zero value</code> — поэтому для проверки существует нотация <code>value-ok</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>m := make(map[int]bool)
+m[1] = true       // Запись
+fmt.Println(m[1]) // Чтение: true
+delete(m, 1)      // Удаление
+
+v, ok := m[2] // v всегда что-то содержит: zero value или реальное значение
+if !ok {
+	fmt.Println("ключа нет!") // ключа правда нет — выведется
+}
+
+var m1 map[int]int
+fmt.Println(len(m1), len(m)) // 0 0 — неинициализированная (nil) мапа тоже имеет длину 0</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// хорошая практика</span>
+        <p>Проверяй мапу не на <code>nil</code>, а на длину через <code>len()</code>. <code>cap()</code> для мапы не существует.</p>
+      </div>
+      <p class="prose-muted">При обходе мапы циклом порядок пар недетерминирован — каждый раз рандомный. Исключение — вывод через <code>fmt.Println</code>: внутри реализована сортировка ключей, поэтому результат всегда стабилен. Проверь сам!</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>for k, v := range m { // k — ключ, v — значение. Порядок случайный
+	fmt.Println(k, v)
+}
+fmt.Println(m) // Всегда один и тот же порядок вывода</code></pre>
+      </div>
+
+      <h3>Внутреннее устройство</h3>
+      <p>Мапам повезло стать живой иллюстрацией эволюции языка: в версии 1.24 их внутреннее устройство сменилось впервые за долгое время. Верхнеуровневый ответ «мапа — это хеш-таблица с хеш-функцией» остаётся верным в обеих версиях; отличается то, что происходит дальше. Сама мапа как была структурой (как и слайс), так и осталась. В исходниках теперь два места — <a href="https://github.com/golang/go/blob/go1.25.6/src/runtime/map_swiss.go">новая реализация</a> и <a href="https://github.com/golang/go/blob/go1.25.6/src/runtime/map_noswiss.go">старая</a> — их стоит изучить отдельно, здесь только суть:</p>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Характеристика</th><th>До Go 1.24</th><th>После Go 1.24 (Swiss Table)</th></tr></thead>
+          <tbody>
+            <tr><td>Принцип</td><td>Бакеты + overflow-цепочки через указатели</td><td>Открытая адресация, один непрерывный массив памяти</td></tr>
+            <tr><td>Размер группы</td><td>8 слотов в бакете, доп. overflow-бакеты по мере надобности</td><td>8 слотов в группе, без цепочек указателей</td></tr>
+            <tr><td>Быстрый отсев</td><td>1 байт tophash (старшие биты хеша)</td><td>7-бит h2 в 64-битном контрольном слове — сразу для 8 слотов, через SIMD</td></tr>
+            <tr><td>Коэффициент загрузки</td><td>~81%</td><td>~87,5%</td></tr>
+            <tr><td>Рост таблицы</td><td>Удвоение размера, перенос бакетов инкрементально</td><td>Сегментированный рост по подтаблицам ~1000 элементов</td></tr>
+            <tr><td>Защита от hash-flooding</td><td>Случайный seed при создании мапы</td><td>Сохраняется</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="prose-muted"><strong>До 1.24</strong>: индекс бакета вычислялся побитовым маскированием (число бакетов всегда степень двойки — без операции взятия остатка), а при достижении порога загрузки или слишком длинных overflow-цепочек запускался рост таблицы. <strong>После 1.24</strong>: контрольное слово даёт сравнение восьми слотов за одну операцию (на платформах без SIMD — через оптимизированный побайтовый цикл), что снижает число дорогих сравнений ключей. Причина именно такой конструкции — кэш-линии процессора: блоки фиксированного размера, в которые данные стоит укладывать целиком ради скорости доступа.</p>
+
+      <h3>Последнее о мапах</h3>
+      <p class="prose-muted">Как и у строк со слайсами, у мап есть собственный пакет стандартной библиотеки — <code>maps</code> (<a href="https://github.com/golang/go/tree/master/src/maps">исходник на GitHub</a>). Стоит изучить его, чтобы быть во всеоружии.</p>
+    </section>
+
+    <!-- 04 Указатели -->
+    <section class="section" id="pointers">
+      <div class="section__head"><span class="section__num">04</span><h2>Указатели</h2></div>
+      <p>Указатели и ссылки на первый взгляд кажутся синонимами. Это не так: <strong>указатель</strong> — переменная, которая хранит адрес в памяти другой переменной; <strong>ссылка</strong> — псевдоним существующего объекта, который нельзя инициализировать как <code>null</code>/<code>nil</code>. В Go ссылок <strong>не существует</strong> — только указатели.</p>
+
+      <div class="spec-grid">
+        <div class="spec-card neutral">
+          <h4>Зачем нужны указатели</h4>
+          <ul>
+            <li>Эффективность — не копировать большие структуры данных</li>
+            <li>Изменение значений — менять переменные прямо внутри функций</li>
+            <li>Работа с nil — представление отсутствующего значения</li>
+            <li>Разделяемое состояние — несколько переменных ссылаются на одни данные</li>
+          </ul>
+        </div>
+        <div class="spec-card neutral">
+          <h4>Два оператора</h4>
+          <ul>
+            <li><code>&amp;</code> — взятие адреса: получить адрес в памяти, где лежит значение</li>
+            <li><code>*</code> — разыменование: получить значение, хранящееся по адресу</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  X["x := 42
+переменная в памяти"]
+  P["p := &amp;x
+указатель хранит адрес x"]
+  P -- "&amp;x  — взять адрес" --> X
+  P -- "*p — разыменовать" --> V["42
+прочитанное значение"]
+        </pre>
+        <p class="diagram-caption">Указатель — это просто адрес; <code>*p = 100</code> меняет x, потому что p и x — одна и та же ячейка памяти</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package main
+
+import "fmt"
+
+func main() {
+	x := 42
+	p := &x // p — указатель на x, хранит адрес x
+
+	fmt.Println("Значение x:", x)   // 42
+	fmt.Println("Адрес x:", &x)     // 0xc000012078 (пример)
+	fmt.Println("Значение p:", p)   // 0xc000012078 (тот же адрес)
+	fmt.Println("Значение *p:", *p) // 42 (разыменование)
+
+	*p = 100 // Изменяем значение через указатель
+	fmt.Println("Новое значение x:", x) // 100
+
+	var pi *int    // Указатель на int
+	var ps *string // Указатель на string
+	var pb *bool   // Указатель на bool
+
+	fmt.Println(pi == nil) // true
+}</code></pre>
+      </div>
+      <p class="prose-muted">Нулевое значение указателя по умолчанию — <code>nil</code>.</p>
+
+      <h3>Как ещё создать указатель</h3>
+      <p>Встроенная функция <code>new</code> выделяет память под значение типа <code>T</code>, инициализирует его нулевым значением и возвращает указатель <code>*T</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>p := new(int)
+fmt.Println(*p) // 0
+
+*p = 42
+fmt.Println(*p) // 42</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// не путать</span>
+        <p><code>new</code> работает с любым типом. Это не то же самое, что <code>make</code>, которая с указателями не работает вовсе и применима лишь к трём типам: слайсам, мапам и ещё одному, с которым мы познакомимся позже.</p>
+      </div>
+    </section>
+
+    <!-- 05 Неявные указатели -->
+    <section class="section" id="ref-types">
+      <div class="section__head"><span class="section__num">05</span><h2>Неявные указатели</h2></div>
+      <p>Некоторые типы Go содержат указатель внутри себя, даже когда это не видно из синтаксиса. Их неформально называют <strong>ссылочными типами</strong> (reference types) — хотя, забавным образом, не «указательными».</p>
+      <p>В программировании есть две концепции передачи аргументов в функцию: <strong>по указателю</strong> (передаётся адрес — изменение внутри функции видно и снаружи) и <strong>по значению</strong> (аргумент копируется, а изменение видно снаружи, только если явно вернуть его через <code>return</code>).</p>
+      <p>В Go есть несколько ссылочных типов — тебе уже знакомы два: слайс и мапа, они содержат указатель внутри. <strong>Массив ссылочным типом не является.</strong></p>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Тип</th><th>Ссылочный?</th><th>Что реально копируется при передаче</th></tr></thead>
+          <tbody>
+            <tr><td>массив</td><td class="no">нет</td><td>все элементы целиком</td></tr>
+            <tr><td>слайс</td><td class="yes">да</td><td>заголовок: указатель + len + cap</td></tr>
+            <tr><td>мапа</td><td class="yes">да</td><td>указатель на хеш-таблицу</td></tr>
+            <tr><td>строка</td><td class="no">нет*</td><td>указатель на неизменяемые байты (*но сама неизменяема)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	m := map[int]int{3: 4}
+	sl := make([]int, 1, 2)
+	ms := [2]int{1, 2}
+
+	addToMap(m)
+	fmt.Println(m) // map[1:2 3:4] — изменения видны вне функции
+
+	addToSlice(sl)
+	fmt.Println(sl) // [1] — изменения видны вне функции
+
+	addToMassive(ms)
+	fmt.Println(ms) // [1 2] — изменения НЕ видны вне функции
+}
+
+func addToMap(m map[int]int) {
+	m[1] = 2
+}
+
+func addToSlice(m []int) {
+	m[0] = 1
+}
+
+func addToMassive(m [2]int) {
+	m[1] = 3
+}</code></pre>
+      </div>
+
+      <p>Соблюдай осторожность, передавая слайс или мапу в функцию. Правило хорошего тона — явно возвращать слайс/мапу из функции, если она изменяется. Со слайсом легко напороться на такую ловушку:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	sl := make([]int, 1, 2)
+
+	addToSlice(sl)
+	fmt.Println(sl) // [1] — изменения НЕ видны: append перезаписал переменную внутри функции
+}
+
+func addToSlice(m []int) {
+	m[0] = 1
+	m = append(m, 2)
+	fmt.Println(m) // [1 2] — внутри функции всё корректно
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// почему так</span>
+        <p><code>append</code> перезаписывает переменную <code>m</code>, а её область видимости из-за передачи по значению ограничена телом функции. Чтобы изменение увидел вызывающий код, слайс нужно явно вернуть через <code>return</code>.</p>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <h3>Статьи</h3>
+    <ul class="source-list">
+      <li><a href="https://go.dev/blog/slices-intro"><span class="arrow">↗</span>Go slices: usage and internals</a></li>
+      <li><a href="https://go.dev/blog/slices"><span class="arrow">↗</span>Arrays, slices (and strings): the mechanics of 'append'</a></li>
+      <li><a href="https://dave.cheney.net/2014/03/17/pointers-in-go"><span class="arrow">↗</span>Pointers in Go</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-map/"><span class="arrow">↗</span>Go maps explained (старая реализация)</a></li>
+      <li><a href="https://go.dev/blog/maps"><span class="arrow">↗</span>Go maps in action (старая реализация)</a></li>
+      <li><a href="https://habr.com/ru/companies/avito/articles/774618/"><span class="arrow">↗</span>Мапы в Go: уровень Pro (старая реализация)</a></li>
+      <li><a href="https://go.dev/blog/swisstable"><span class="arrow">↗</span>Faster Go maps with Swiss Tables (новая реализация)</a></li>
+      <li><a href="https://habr.com/ru/companies/oleg-bunin/articles/934906"><span class="arrow">↗</span>Швейцария в картах Go (новая реализация)</a></li>
+    </ul>
+    <h3>Видео</h3>
+    <ul class="source-list">
+      <li><a href="https://www.youtube.com/watch?v=1vAIvqDo5LE"><span class="arrow">↗</span>Александр Сахаров — «Что нужно знать о слайсах»</a></li>
+      <li><a href="https://www.youtube.com/watch?v=10LW7NROfOQ"><span class="arrow">↗</span>Николай Тузов — «Golang slice в деталях»</a></li>
+      <li><a href="https://www.youtube.com/watch?v=7ij3u-0YsJI"><span class="arrow">↗</span>Владимир Балун — «Всё о массивах и слайсах»</a></li>
+      <li><a href="https://youtu.be/P_SXTUiA-9Y"><span class="arrow">↗</span>Николай Тузов — мапы под капотом (старая реализация)</a></li>
+      <li><a href="https://youtu.be/0UX4MIfOMEs"><span class="arrow">↗</span>Николай Тузов — о хеш-таблицах (старая реализация)</a></li>
+      <li><a href="https://youtu.be/CTe3mQAm3Eo"><span class="arrow">↗</span>Кирилл Кузин — «Швейцария в картах Go» (новая реализация)</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 2 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

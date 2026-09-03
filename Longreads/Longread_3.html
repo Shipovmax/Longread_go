@@ -1,0 +1,888 @@
+<title>Утиная типизация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .spec-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:.4rem;}
+  @media (max-width:640px){.spec-grid{grid-template-columns:1fr;}}
+  .spec-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.3rem 1.4rem; box-shadow:var(--shadow);}
+  .spec-card h4{margin-bottom:.9rem; display:flex; align-items:center; gap:.5em;}
+  .spec-card.pro h4{color:var(--accent);}
+  .spec-card.con h4{color:var(--accent-2);}
+  .spec-card.neutral h4{color:var(--accent);}
+  .spec-card ul{display:flex; flex-direction:column; gap:.55rem; list-style:none;}
+  .spec-card li{position:relative; padding-left:1.4em; font-size:.97rem; color:var(--text-muted);}
+  .spec-card.pro li::before{content:"+"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.con li::before{content:"–"; position:absolute; left:0; color:var(--accent-2); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.neutral li::before{content:"›"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table caption{text-align:left; padding:.7rem 1rem; font-family:var(--font-body); font-style:italic; color:var(--text-faint); font-size:.85rem; border-bottom:1px solid var(--border);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+  table.data-table td.yes{color:var(--accent); font-weight:600;}
+  table.data-table td.no{color:var(--text-faint);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  footer.sources h3{font-family:var(--font-mono); font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin-top:.4rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 3 из 11</span>
+    <h1 class="title">Утиная типизация<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Функции как объекты первого класса, структуры вместо наследования и интерфейсы, которые не нужно объявлять руками — достаточно реализовать нужные методы.</p>
+    <div class="meta-row">
+      <span><b>~24 мин</b> чтения</span>
+      <span><b>5</b> разделов</span>
+      <span>нужны <b>главы 1–2</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#functions"><span class="n">01</span>Функции</a></li>
+        <li><a href="#structs"><span class="n">02</span>Структуры</a></li>
+        <li><a href="#custom-types"><span class="n">03</span>Кастомные типы</a></li>
+        <li><a href="#methods"><span class="n">04</span>Методы</a></li>
+        <li><a href="#interfaces"><span class="n">05</span>Интерфейсы</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#functions"><span class="n">01</span>Функции</a></li>
+      <li><a href="#structs"><span class="n">02</span>Структуры</a></li>
+      <li><a href="#custom-types"><span class="n">03</span>Кастомные типы</a></li>
+      <li><a href="#methods"><span class="n">04</span>Методы</a></li>
+      <li><a href="#interfaces"><span class="n">05</span>Интерфейсы</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 Функции -->
+    <section class="section" id="functions">
+      <div class="section__head"><span class="section__num">01</span><h2>Что сложного в функциях</h2></div>
+      <p>Ты уже использовал функции как строительные блоки программ: принимал аргументы, возвращал результаты. Но с функцией в Go можно проделывать вещи поинтереснее — потому что функции здесь <strong>объекты первого класса</strong>. Это значит, что с ними можно обращаться как с любой переменной: переприсваивать, передавать аргументом, возвращать из другой функции.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	p := prints    // Не указываем аргументы — функция присваивается переменной
+	fmt.Println(p) // Увидим адрес
+}
+
+func prints(str string) {
+	fmt.Println(str)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Функцию можно присвоить переменной в любом месте и передавать её дальше, не вызывая до нужного момента. А если функция нужна только в одном месте и жить отдельной сущностью ей незачем — на помощь приходят <strong>анонимные функции</strong>: рождаются прямо там, где нужны, без имени, но обязательно с присвоением переменной.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>f := func(a int, b int) int {
+	return a + b
+}
+
+result := f(2, 3)
+fmt.Println(result) // 5</code></pre>
+      </div>
+      <p class="prose-muted">Два отличия от обычных функций: нет имени, объявление прямо в коде. А ещё анонимную функцию можно вызвать сразу же, присвоив результат переменной:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>result := func(x int) int {
+	return x * x
+}(4)
+
+fmt.Println(result) // 16</code></pre>
+      </div>
+      <p>Такие функции нужны в основном для трёх вещей: замыканий, колбэков и локальной логики в конкурентном коде. Сейчас — только про первое.</p>
+
+      <h3>Замыкания</h3>
+      <p><strong>Замыкание</strong> (closure) — анонимная (чаще всего) или именованная функция, использующая переменные из внешней области видимости. Замыкание не копирует значение переменной — оно <em>захватывает</em> её и влияет на её состояние всё время своей жизни.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func counter() func() int {
+	i := 0
+
+	return func() int {
+		i++
+		return i
+	}
+}</code></pre>
+      </div>
+      <p class="prose-muted">Анонимная функция возвращается из <code>counter</code>, но её тело ссылается на <code>i</code>, объявленную снаружи. Обе находятся в одной области видимости, поэтому анонимная функция видит и удерживает <code>i</code>.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>c := counter()
+
+fmt.Println(c()) // 1
+fmt.Println(c()) // 2
+fmt.Println(c()) // 3</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  subgraph C1["c := counter()"]
+    I1["i = 0 → 1 → 2 → 3"]
+  end
+  subgraph C2["c2 := counter()"]
+    I2["i = 0 → 1 → 2"]
+  end
+  C1 -. "своё, изолированное состояние" .- C2
+        </pre>
+        <p class="diagram-caption">Каждый вызов <code>counter()</code> порождает новое, независимое замыкание — своё <code>i</code> у каждого</p>
+      </div>
+      <p class="prose-muted">Можно вызвать <code>counter</code> несколько раз подряд и получить несколько разных замыканий — они работают полностью независимо друг от друга. Замыкания захватывают не только переменные, но и параметры функции:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func multiplier(factor int) func(int) int {
+	return func(x int) int {
+		return x * factor
+	}
+}
+
+double := multiplier(2)
+triple := multiplier(3)
+
+fmt.Println(double(5)) // 10
+fmt.Println(triple(5)) // 15</code></pre>
+      </div>
+
+      <h3>Именованный возврат</h3>
+      <p>Переменные для возврата необязательно создавать в теле функции — можно объявить их прямо в сигнатуре, тогда они появятся уже на этапе компиляции:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func calc(first int, second int) (int, int) {
+	sum := first + second
+	product := first * second
+
+	return sum, product
+}
+
+func calc(first int, second int) (sum int, product int) {
+	sum = first + second
+	product = first * second
+
+	return
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// главное правило</span>
+        <p>Код должен быть понятен тому, кто его читает. Именованный возврат хорош для маленьких функций, но плох там, где логики много или функция не умещается на экран — придётся постоянно возвращаться взглядом к сигнатуре, чтобы вспомнить, что там возвращается.</p>
+      </div>
+    </section>
+
+    <!-- 02 Структуры -->
+    <section class="section" id="structs">
+      <div class="section__head"><span class="section__num">02</span><h2>Структуры: группировка данных и никакого ООП</h2></div>
+      <p><strong>Структура</strong> — составной тип, объединяющий связанные переменные в одну единицу данных: именованные поля одного или разных типов в общем контейнере.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Employee struct {
+	Name     string
+	Age      int
+	Position string
+	Salary   int
+}</code></pre>
+      </div>
+      <p class="prose-muted">Имя структуры — часть её типа. Создать структуру можно по-разному. Через явное именование полей (пропущенные поля получат <code>zero value</code> своего типа, или <code>nil</code> для ссылочных):</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>emp1 := Employee{
+	Name:     "Анна Иванова",
+	Age:      28,
+	Position: "Разработчик",
+	Salary:   120000,
+}</code></pre>
+      </div>
+      <p>В краткой форме — без имён полей, но строго по порядку:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>emp2 := Employee{"Петр Петров", 32, "Тестировщик", 100000}</code></pre>
+      </div>
+      <p>Или создать пустую (все поля — <code>zero value</code>) и заполнять по мере надобности, обращаясь через точку:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var emp3 Employee
+emp3.Name = "Мария Сидорова"
+emp3.Age = 25
+emp3.Position = "Аналитик"
+emp3.Salary = 110000
+
+fmt.Println(emp3.Name) // Мария Сидорова</code></pre>
+      </div>
+
+      <h3>Важные особенности структур</h3>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Передача по значению.</strong> Как и любой тип, структура передаётся в функцию копией — изменения внутри функции снаружи не видны. Чтобы изменить оригинал, либо явно возвращай структуру, либо передавай указатель на неё.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Композиция и встраивание.</strong> Структуры можно вкладывать друг в друга (nested-структуры), а частный случай — встраивание (embedding) без имени поля: тогда поля и методы встроенной структуры «продвигаются» и доступны напрямую.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Сравниваемость.</strong> Структуры сравнимы через <code>==</code>/<code>!=</code>, только если сравнимы все их поля. Одно поле-слайс — и вся структура теряет сравниваемость.</p></div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Эта функция НЕ изменит оригинальную структуру!
+func tryToIncreaseSalary(emp Employee, amount int) {
+	emp.Salary += amount // Изменяем только копию
+	fmt.Printf("Внутри функции зарплата: %d\n", emp.Salary)
+}
+
+// Эта функция изменит оригинальную структуру
+func increaseSalary(emp *Employee, amount int) {
+	emp.Salary += amount // Изменяем оригинал через указатель
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// trade-off</span>
+        <p>Идиоматично передавать по значению, но большие структуры (условно, от ~10 МБ) дорого копировать — тут лучше указатель. А передача по значению гарантирует, что функция не изменит структуру без спроса. Выбирай осознанно.</p>
+      </div>
+
+      <p>Композиция — поля любого типа, включая другие структуры:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Address struct {
+	Street string
+	City   string
+	Zip    string
+}
+
+type Person struct {
+	Name    string
+	Age     int
+	Address Address // Вложенная структура
+}</code></pre>
+      </div>
+      <p class="prose-muted">Встраивание (embedding) — частный случай композиции, где у поля нет имени. Тогда поля и методы встроенной структуры доступны напрямую, без явного обращения к ней:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Contact struct {
+	Email string
+	Phone string
+}
+
+type Employee struct {
+	Name     string
+	Position string
+	Contact  // Встроенная структура (анонимное поле)
+}
+
+func main() {
+	emp := Employee{
+		Name:     "Анна Иванова",
+		Position: "Разработчик",
+		Contact: Contact{
+			Email: "anna@company.com",
+			Phone: "+7-123-456-7890",
+		},
+	}
+
+	fmt.Println(emp.Email)         // короткий синтаксис — работает
+	fmt.Println(emp.Contact.Email) // полный синтаксис — тоже работает
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// не наследование</span>
+        <p>Соблазн назвать это наследованием, как в ООП, — ложный. Вместо отношения «является» (is-a) здесь отношение «содержит» (has-a) с удобным синтаксисом доступа.</p>
+      </div>
+      <p>При совпадении имён полей возникает конфликт — и тут действуют чёткие правила приоритета:</p>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">a</span><p>Поле, объявленное в самой структуре, всегда приоритетнее одноимённого поля встроенной.</p></div>
+        <div class="diff-item"><span class="diff-num">b</span><p>Если совпадение только среди встроенных структур — побеждает поле с меньшей глубиной (ближе к внешней структуре).</p></div>
+        <div class="diff-item"><span class="diff-num">c</span><p>Если совпадение на одной и той же глубине сразу у нескольких встраиваний — обращение без полного пути даёт ошибку компиляции из-за неоднозначности.</p></div>
+      </div>
+    </section>
+
+    <!-- 03 Кастомные типы -->
+    <section class="section" id="custom-types">
+      <div class="section__head"><span class="section__num">03</span><h2>Кастомные типы</h2></div>
+      <p>Поверх любого существующего типа в Go можно объявить собственный — <strong>кастомный тип</strong>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Stringz []string
+type Address string
+type FullAddress Address
+type EveryDay int</code></pre>
+      </div>
+      <p class="prose-muted">Тип можно построить и поверх встроенного (даже массива или слайса), и поверх другого кастомного типа. Это удобно, когда нужно отличать конкретные бизнес-сущности от встроенных типов — или прикрутить к типу собственное поведение, о чём и пойдёт речь дальше.</p>
+    </section>
+
+    <!-- 04 Методы -->
+    <section class="section" id="methods">
+      <div class="section__head"><span class="section__num">04</span><h2>Методы структур</h2></div>
+      <p><strong>Метод</strong> — функция, принадлежащая конкретному типу (структуре или кастомному типу) и реализующая логику, связанную только с ним. Принадлежность обозначается <strong>ресивером</strong> (получателем) между <code>func</code> и именем функции:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Status string // Кастомный тип
+
+// s — ресивер типа Status, связывает метод и тип
+func (s Status) String() string {
+	return string(s) // Приведение к базовому типу
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Rectangle struct {
+	Width  float64
+	Height float64
+}
+
+// Получатель по значению
+func (r Rectangle) Area() float64 {
+	return r.Width * r.Height
+}
+
+// Получатель по указателю
+func (r *Rectangle) Scale(factor float64) {
+	r.Width *= factor
+	r.Height *= factor
+}
+
+func main() {
+	rect := Rectangle{Width: 10, Height: 5}
+
+	fmt.Println("Площадь:", rect.Area())
+	rect.Scale(2)
+	fmt.Println("После масштабирования:", rect)
+	fmt.Println("Новая площадь:", rect.Area())
+}</code></pre>
+      </div>
+
+      <h3>Получатель по значению vs по указателю</h3>
+      <div class="spec-grid">
+        <div class="spec-card neutral">
+          <h4>По значению — метод получает копию</h4>
+          <ul>
+            <li>Когда менять поля структуры не требуется</li>
+            <li>Безопасен при конкурентном доступе</li>
+            <li>Может быть дороже — из-за копирования больших структур</li>
+          </ul>
+        </div>
+        <div class="spec-card neutral">
+          <h4>По указателю — метод получает указатель</h4>
+          <ul>
+            <li>Когда нужно менять исходные поля структуры</li>
+            <li>Не копирует — эффективен для больших структур</li>
+            <li>Требует осторожности при конкурентном доступе</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// правило согласованности</span>
+        <p>Указательный ресивер стоит заводить только тогда, когда получателя действительно нужно менять. Но как только он появился у одного метода типа — стоит перевести на указатель и остальные методы. Иначе теряется консистентность, ожидаемая изменяемость и ломается набор методов, нужный для реализации интерфейсов одним типом ресивера.</p>
+      </div>
+
+      <h3>Публичные и приватные методы</h3>
+      <p class="prose-muted">Как и у функций, регистр первой буквы решает: с заглавной — метод <strong>экспортируемый</strong> (публичный API типа, доступен другим пакетам), с маленькой — <strong>неэкспортируемый</strong> (внутренняя логика, скрытая от внешнего мира). Это позволяет менять реализацию, не ломая код, завязанный на публичный интерфейс структуры.</p>
+
+      <h3>Конфликт методов при embedding</h3>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Продвижение методов.</strong> Методы встроенной структуры автоматически становятся доступны у внешней.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Приоритет внешней.</strong> Метод внешнего типа скрывает одноимённый метод встроенной структуры.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Неоднозначность.</strong> Если два встроенных типа на одной глубине делят одно имя метода — вызов без уточнения (<code>fh.Write()</code>) — ошибка компиляции. Нужен явный путь.</p></div>
+      </div>
+    </section>
+
+    <!-- 05 Интерфейсы -->
+    <section class="section" id="interfaces">
+      <div class="section__head"><span class="section__num">05</span><h2>Интерфейсы: определение поведения</h2></div>
+      <p><strong>Интерфейс</strong> в Go — абстрактный тип, описывающий поведение через набор методов, а не данные. Правило языка — <strong>утиная типизация</strong>: если что-то ходит как утка, крякает как утка и летает как утка — это утка. На практике: если тип реализует все методы интерфейса, он автоматически ему удовлетворяет — без явного <code>implements</code>.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Shape interface { // Два метода в контракте
+	Area() float64
+	Perimeter() float64
+}
+
+type Rectangle struct { // Реализует Shape, хотя методов три, а не два
+	Width  float64
+	Height float64
+}
+
+func (r Rectangle) Area() float64      { return r.Width * r.Height }
+func (r Rectangle) Perimeter() float64 { return 2 * (r.Width + r.Height) }
+func (r Rectangle) Info() {
+	fmt.Println("Width: ", r.Width)
+	fmt.Println("Height: ", r.Height)
+}</code></pre>
+      </div>
+
+      <h3>Использование интерфейсов</h3>
+      <p class="prose-muted">Практическая польза — минимум в двух вещах: избавление кода от конкретных зависимостей и, как следствие, простота тестирования. Функция, принимающая интерфейс, зависит не от реализации, а от поведения:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func printShapeInfo(s Shape) {
+	fmt.Printf("Площадь: %.2f\n", s.Area())
+	fmt.Printf("Периметр: %.2f\n", s.Perimeter())
+}
+
+func main() {
+	rect := Rectangle{Width: 10, Height: 5}
+	circle := Circle{Radius: 3}
+
+	printShapeInfo(rect)   // Один и тот же код
+	printShapeInfo(circle) // работает с разными типами
+}</code></pre>
+      </div>
+
+      <h3>Внутреннее устройство интерфейса</h3>
+      <p>Неожиданно, но интерфейс в исходном коде Go — тоже структура (<a href="https://github.com/golang/go/blob/go1.25.6/src/runtime/runtime2.go#L178">исходник</a>):</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">runtime2.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type iface struct {
+	tab  *itab
+	data unsafe.Pointer
+}</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  IF["iface"] --> TAB["*itab
+интерфейсный тип
++ реальный тип
++ таблица методов"]
+  IF --> DATA["*data
+указатель на
+реальное значение"]
+        </pre>
+        <p class="diagram-caption">Оба поля интерфейса — указатели: один на метаданные о типах и методах, второй — на само значение</p>
+      </div>
+      <p class="prose-muted"><code>itab</code> хранит метаданные — интерфейсный тип, реальный тип и таблицу указателей на методы, связывающую одно с другим; <code>data</code> указывает на конкретное значение, реализующее интерфейс.</p>
+
+      <h3>Пустой интерфейс</h3>
+      <p><strong>Пустой интерфейс</strong> <code>interface{}</code> (с Go 1.18+ — <code>any</code>) не требует ни одного метода. А раз любой тип может иметь ноль методов — <strong>любой тип удовлетворяет пустому интерфейсу</strong>. Это делает <code>any</code> универсальным контейнером для значения любого типа:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func printAnything(value interface{}) {
+	fmt.Printf("Значение: %v, Тип: %T\n", value, value)
+}
+
+func main() {
+	printAnything(42)                              // int
+	printAnything("Hello")                         // string
+	printAnything([]int{1, 2, 3})                  // []int
+	printAnything(Rectangle{Width: 10, Height: 5}) // Rectangle
+	printAnything(nil)                             // <nil>
+}</code></pre>
+      </div>
+      <p class="prose-muted">В исходниках пустой интерфейс — тоже отдельная, более простая структура (<a href="https://github.com/golang/go/blob/go1.25.6/src/runtime/runtime2.go#L183">исходник</a>) — без таблицы методов <code>itab</code>, потому что проверять соответствие набору методов не нужно:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">runtime2.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type eface struct {
+	_type *_type
+	data  unsafe.Pointer
+}</code></pre>
+      </div>
+
+      <h4>Type Assertion</h4>
+      <p class="prose-muted">Чтобы извлечь конкретный тип из значения интерфейса — <strong>type assertion</strong>, с проверкой через идиому «comma, ok»:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func processValue(value interface{}) {
+	if str, ok := value.(string); ok {
+		fmt.Printf("Это строка: %s (длина: %d)\n", str, len(str))
+	} else if num, ok := value.(int); ok {
+		fmt.Printf("Это число: %d (квадрат: %d)\n", num, num*num)
+	} else {
+		fmt.Println("Неизвестный тип")
+	}
+}</code></pre>
+      </div>
+
+      <h4>Type Switch</h4>
+      <p class="prose-muted">Более элегантный способ работы с разными типами:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func describe(value interface{}) {
+	switch v := value.(type) {
+	case string:
+		fmt.Printf("Строка длиной %d: %s\n", len(v), v)
+	case int:
+		fmt.Printf("Целое число: %d\n", v)
+	case float64:
+		fmt.Printf("Число с плавающей точкой: %.2f\n", v)
+	case Rectangle:
+		fmt.Printf("Прямоугольник: площадь = %.2f\n", v.Area())
+	default:
+		fmt.Printf("Неизвестный тип: %T\n", v)
+	}
+}</code></pre>
+      </div>
+
+      <h3>Ограничения и особенности пустого интерфейса</h3>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Потеря статической типизации.</strong> <code>var x any = 42; x + 10</code> — ошибка компиляции: Go не знает, что <code>x</code> число. Нужен явный type assertion.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Производительность.</strong> Проверка и приведение типов на каждый элемент — заметно медленнее, чем работа с уже конкретным типом.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Нет проверки на этапе компиляции.</strong> <code>data.(int)</code> для строки внутри <code>any</code> благополучно скомпилируется — и упадёт паникой в рантайме. Безопасный путь — снова «comma, ok».</p></div>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>// Медленнее — нужны проверка типов и приведения
+func slowSum(values []any) int {
+	sum := 0
+	for _, v := range values {
+		if num, ok := v.(int); ok {
+			sum += num
+		}
+	}
+	return sum
+}
+
+// Быстрее — работа с конкретным типом
+func fastSum(values []int) int {
+	sum := 0
+	for _, v := range values {
+		sum += v
+	}
+	return sum
+}</code></pre>
+      </div>
+
+      <h3>Пустой и nil-интерфейс</h3>
+      <p>Их часто путают — но это не одно и то же. Пустой интерфейс не имеет набора методов, но вовсе не обязан быть <code>nil</code>. <code>nil</code> означает, что интерфейс инициализирован как тип, но не содержит значения, которому можно сопоставить удовлетворение поведению:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	var p fmt.Stringer
+	var i any
+
+	fmt.Println(p == nil) // true
+	fmt.Println(i == nil) // true
+
+	i = 42
+	fmt.Println(i == nil) // false
+}</code></pre>
+      </div>
+
+      <h3>Method set и правила реализации интерфейсов</h3>
+      <p class="prose-muted"><strong>Method set</strong> — набор методов, доступных значению конкретного типа. От него напрямую зависит, какой тип какому интерфейсу может удовлетворять:</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Метод объявлен как</th><th>Входит в method set типа T</th><th>Входит в method set типа *T</th></tr></thead>
+          <tbody>
+            <tr><td>(t T) — по значению</td><td class="yes">да</td><td class="yes">да</td></tr>
+            <tr><td>(t *T) — по указателю</td><td class="no">нет</td><td class="yes">да</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Document struct {
+	title   string
+	content string
+}
+
+func (d Document) GetTitle() string    { return d.title }
+func (d *Document) SetTitle(title string) { d.title = title }
+
+type Reader interface { GetTitle() string }
+type Writer interface {
+	GetTitle() string
+	SetTitle(string)
+}
+
+func main() {
+	doc := Document{title: "Заголовок", content: "Содержимое"}
+	docPtr := &Document{title: "Заголовок", content: "Содержимое"}
+
+	var r1 Reader = doc    // OK
+	var r2 Reader = docPtr // OK — указатель включает и методы значения
+
+	var w1 Writer = doc    // Ошибка компиляции: method set T не включает SetTitle
+	var w2 Writer = docPtr // OK
+}</code></pre>
+      </div>
+
+      <h3>Автоматическое разыменование</h3>
+      <p class="prose-muted">При вызове метода Go сам преобразует между указателем и значением:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Counter struct {
+	value int
+}
+
+func (c *Counter) Increment() { c.value++ }
+func (c Counter) GetValue() int { return c.value }
+
+func main() {
+	counter1 := Counter{value: 0}
+	counter1.Increment() // компилятор подставит (&counter1).Increment()
+
+	counter2 := &Counter{value: 0}
+	value := counter2.GetValue() // компилятор подставит (*counter2).GetValue()
+
+	fmt.Println(counter1.GetValue(), value)
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// но не при интерфейсах</span>
+        <p>Авторазыменование работает только в момент вызова метода — оно не меняет сам method set типа. При присваивании интерфейсу учитывается именно исходный method set, а автоматической подстановки уже не будет.</p>
+      </div>
+
+      <h3>Композиция интерфейсов</h3>
+      <p class="prose-muted">Интерфейсы комбинируются в более сложные контракты — точно так же, как структуры:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Reader interface { Read([]byte) (int, error) }
+type Writer interface { Write([]byte) (int, error) }
+type Closer interface { Close() error }
+
+type ReadWriter interface {
+	Reader
+	Writer
+}
+
+type ReadWriteCloser interface {
+	Reader
+	Writer
+	Closer
+}</code></pre>
+      </div>
+
+      <h3>Идиомы проектирования интерфейсов</h3>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Держи интерфейсы маленькими.</strong> Лучше много маленьких, чем один большой.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Определяй там, где используешь</strong> — не в пакете с реализацией. Интерфейс отражает потребности клиента, а не возможности провайдера.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Осмысленные имена</strong> — <code>Writer</code>, <code>Reader</code>, <code>Validator</code>.</p></div>
+        <div class="diff-item"><span class="diff-num">4</span><p><strong>Принимай интерфейсы — возвращай конкретные типы.</strong> Абстракция нужна там, где ты потребляешь поведение; вызывающему полезны реальные поля и методы результата.</p></div>
+        <div class="diff-item"><span class="diff-num">5</span><p><strong>Не вводи интерфейс «на всякий случай».</strong> Одна реализация без потребности в подмене — начинай с конкретного типа. Интерфейс добавь, когда появится реальная вариативность.</p></div>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <h3>Статьи</h3>
+    <ul class="source-list">
+      <li><a href="https://www.geeksforgeeks.org/structures-in-golang/"><span class="arrow">↗</span>Structures in Golang</a></li>
+      <li><a href="https://go101.org/article/struct.html"><span class="arrow">↗</span>Structs in Go</a></li>
+      <li><a href="http://xztvc.ru/post/optimizaciya-struktur-v-go-vyravnivaniem"><span class="arrow">↗</span>Оптимизация структур в Go выравниванием</a></li>
+      <li><a href="https://go101.org/article/method.html"><span class="arrow">↗</span>Methods in Go</a></li>
+      <li><a href="https://www.simondrake.dev/blog/value-receivers-vs-pointer-receivers"><span class="arrow">↗</span>Value receivers vs pointer receivers</a></li>
+      <li><a href="https://go.dev/doc/faq#methods_on_values_or_pointers"><span class="arrow">↗</span>Should I define methods on values or pointers</a></li>
+      <li><a href="https://research.swtch.com/interfaces"><span class="arrow">↗</span>Описание интерфейса как структуры</a></li>
+      <li><a href="https://github.com/teh-cmc/go-internals/blob/master/chapter2_interfaces/README.md"><span class="arrow">↗</span>Внутрянка интерфейсов с примерами</a></li>
+      <li><a href="https://tul.github.io/2018/07/23/go-interfaces-deep-dive.html"><span class="arrow">↗</span>Go interfaces deep dive</a></li>
+      <li><a href="https://habr.com/ru/articles/856272/"><span class="arrow">↗</span>Погружение в интерфейсы</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-io-reader-writer/index.html"><span class="arrow">↗</span>Интерфейсы reader/writer</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-io-closer-seeker-readfrom-writeto/"><span class="arrow">↗</span>Обзор некоторых интерфейсов</a></li>
+    </ul>
+    <h3>Видео</h3>
+    <ul class="source-list">
+      <li><a href="https://www.youtube.com/watch?v=7Cmp8ySxauc"><span class="arrow">↗</span>defer panic — «Зачем нужны интерфейсы в Go»</a></li>
+      <li><a href="https://www.youtube.com/watch?v=tCN8ac6C1tA"><span class="arrow">↗</span>Gopher School — «Интерфейсы в Golang»</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 3 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

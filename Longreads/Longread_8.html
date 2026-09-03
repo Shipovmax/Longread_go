@@ -1,0 +1,607 @@
+<title>Поток байтов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 8 из 11</span>
+    <h1 class="title">Поток байтов<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Как <code>os</code> открывает, читает и пишет файлы, почему <code>io.Reader</code>/<code>io.Writer</code> — самый честный пример маленьких интерфейсов в языке, и как не утащить гигабайтный файл целиком в память.</p>
+    <div class="meta-row">
+      <span><b>~14 мин</b> чтения</span>
+      <span><b>4</b> раздела</span>
+      <span>нужны <b>главы 1–7</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#files"><span class="n">01</span>Работа с файлами</a></li>
+        <li><a href="#io"><span class="n">02</span>Пакет io</a></li>
+        <li><a href="#bufio"><span class="n">03</span>Большие файлы</a></li>
+        <li><a href="#fs"><span class="n">04</span>Файловая система</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#files"><span class="n">01</span>Работа с файлами</a></li>
+      <li><a href="#io"><span class="n">02</span>Пакет io</a></li>
+      <li><a href="#bufio"><span class="n">03</span>Большие файлы</a></li>
+      <li><a href="#fs"><span class="n">04</span>Файловая система</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 Работа с файлами -->
+    <section class="section" id="files">
+      <div class="section__head"><span class="section__num">01</span><h2>Работа с файлами</h2></div>
+      <p>Файлы — не только классический текст: CSV, Excel, PDF для фронтенда или админки, изображения, которые порой нужно сжать. Разберём работу с текстовыми файлами — освоив её, с остальными форматами разберёшься по аналогии.</p>
+      <p class="prose-muted">Базовые операции очевидны: открыть, прочитать, записать, создать, проверить существование. За всё отвечает пакет <code>os</code>, а под капотом файл — вот такая обёртка над системным дескриптором:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">types.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type File struct {
+	*file // os specific
+}</code></pre>
+      </div>
+      <p class="prose-muted">Неэкспортируемое поле прячет системную специфику, а наружу торчат только методы экспортируемой структуры. Все они, к слову, <a href="https://github.com/golang/go/blob/go1.25.6/src/os/file.go#L37">конкурентно безопасны</a>.</p>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Функция</th><th>Что делает</th></tr></thead>
+          <tbody>
+            <tr><td class="type">os.Open(name)</td><td>открывает только для чтения; ошибка PathError, если файла нет</td></tr>
+            <tr><td class="type">os.OpenFile(name, flag, perm)</td><td>гибкое открытие — чтение, запись, создание, по флагам</td></tr>
+            <tr><td class="type">os.Create(name)</td><td>создаёт файл (или обрезает существующий) для записи</td></tr>
+            <tr><td class="type">os.ReadFile(name)</td><td>читает файл целиком в память одним вызовом</td></tr>
+            <tr><td class="type">os.WriteFile(name, data, perm)</td><td>пишет данные в файл целиком, создавая его при нужде</td></tr>
+            <tr><td class="type">os.Stat(name)</td><td>метаданные о файле — заодно проверка существования</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><code>os.Open</code> под капотом сам вызывает <a href="https://github.com/golang/go/blob/go1.25.6/src/os/file.go#L389"><code>os.OpenFile</code></a> с флагом <code>O_RDONLY</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>file, err := os.Open("input.txt")
+if err != nil {
+	return err
+}
+defer file.Close()</code></pre>
+      </div>
+      <p class="prose-muted">Не закрыть файл — верный способ получить утечку ресурсов. <code>defer</code> отработает даже при панике. Правильнее закрывать с проверкой ошибки, хоть этим и часто пренебрегают:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>defer func() {
+	if err := file.Close(); err != nil {
+		fmt.Println(err)
+	}
+}()</code></pre>
+      </div>
+      <p>Через <code>os.OpenFile</code> файл можно открыть и на чтение, и на запись, и создать заодно — нужны только <a href="https://github.com/golang/go/blob/go1.25.6/src/os/file.go#L79">флаги</a> и права доступа:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>file, err := os.OpenFile("notes.txt", os.O_RDWR|os.O_CREATE, 0644)
+if err != nil {
+	log.Fatal(err)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Читать конкретное число байт можно методом <code>Read</code> — не больше, чем вмещает переданный слайс. Дочитал до конца — получишь <code>io.EOF</code>, и это нормальный сигнал, а не поломка:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>b := make([]byte, 1024)
+
+for {
+	n, err := file.Read(b) // n — сколько байт реально прочитано
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		return fmt.Errorf("Warning: %w", err)
+	}
+}</code></pre>
+      </div>
+      <p>Для небольших файлов проще читать целиком через <code>os.ReadFile</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>data, err := os.ReadFile("input.txt")
+if err != nil {
+	log.Fatal(err)
+}
+
+fmt.Print(string(data))</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// не для гигабайтов</span>
+        <p><code>os.ReadFile</code> блокируется до полного чтения и держит весь файл в памяти — для файлов в сотни мегабайт нужен другой подход (раздел ниже).</p>
+      </div>
+
+      <p>Проверить, существует ли файл, можно через <code>os.Stat</code> и <code>fs.ErrNotExist</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func fileExists(filename string) (bool, error) {
+	_, err := os.Stat(filename)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	return false, err
+}</code></pre>
+      </div>
+      <p class="prose-muted">Для записи есть <code>os.WriteFile</code> (создаёт файл при нужде и пишет всё сразу) и методы дескриптора — <code>file.Write()</code> для байтов, <code>file.WriteString()</code> для строк:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>err := os.WriteFile("testdata/hello", []byte("Hello, Gophers!"), 0666)
+if err != nil {
+	log.Fatal(err)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Удаление файла оставляем найти самостоятельно — благо, гуглится с полпинка.</p>
+    </section>
+
+    <!-- 02 Пакет io -->
+    <section class="section" id="io">
+      <div class="section__head"><span class="section__num">02</span><h2>Пакет io</h2></div>
+      <p>Пакет <code>io</code> — едва ли не самый чистый пример того, как маленькие интерфейсы дают сильную абстракцию. Загляни в <a href="https://github.com/golang/go/blob/go1.25.6/src/io/io.go">исходник</a> — там почти сплошь интерфейсы:</p>
+      <dl class="glossary">
+        <div><dt>io.Reader</dt><dd>умеет <code>Read(p []byte) (int, error)</code> — тот самый метод, что мы видели у <code>os.File</code>.</dd></div>
+        <div><dt>io.Writer</dt><dd>умеет <code>Write(p []byte) (int, error)</code>.</dd></div>
+        <div><dt>io.Closer</dt><dd>умеет <code>Close() error</code>.</dd></div>
+        <div><dt>io.ReadWriter</dt><dd>Reader + Writer вместе.</dd></div>
+        <div><dt>io.ReadCloser / io.WriteCloser</dt><dd>Reader/Writer в паре с Closer.</dd></div>
+      </dl>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  R["io.Reader"] --> RW["io.ReadWriter"]
+  W["io.Writer"] --> RW
+  R --> RC["io.ReadCloser"]
+  C["io.Closer"] --> RC
+  W --> WC["io.WriteCloser"]
+  C --> WC
+  RW --> RWC["io.ReadWriteCloser"]
+  C --> RWC
+        </pre>
+        <p class="diagram-caption">Три метода-атома складываются в любую нужную комбинацию поведения — композиция интерфейсов в деле</p>
+      </div>
+
+      <p class="prose-muted">Взять зависимость на <code>io</code> — значит зависеть только от поведения, а не от конкретной реализации. Даже сами функции пакета принимают на вход эти интерфейсы, а не конкретные типы:</p>
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  SRC["любой io.Reader
+файл, сеть, буфер..."] -->|io.Copy| DST["любой io.Writer
+файл, сеть, буфер..."]
+        </pre>
+        <p class="diagram-caption"><code>io.Copy</code> не спрашивает, что именно перед ним — контракт уже описан в типах</p>
+      </div>
+      <p class="prose-muted"><code>io.Copy()</code> копирует данные из любого <code>Reader</code> в любой <code>Writer</code>, вообще не интересуясь их конкретной природой — контракт уже зашит в сигнатуре, а строгая типизация гарантирует, что в проде это точно сработает.</p>
+    </section>
+
+    <!-- 03 Большие файлы -->
+    <section class="section" id="bufio">
+      <div class="section__head"><span class="section__num">03</span><h2>Работа с большими файлами</h2></div>
+      <p>Читать весь файл в память сразу — плохая идея при большом объёме. Ручное чтение через буфер-слайс работает, но легко остановиться на середине слова. Для этого есть готовый инструмент — пакет <code>bufio</code> (buffered input/output).</p>
+      <p><code>bufio.Scanner</code> — высокоуровневый инструмент последовательного, чаще всего построчного, чтения:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>file, err := os.Open("log.txt")
+if err != nil {
+	log.Fatal(err)
+}
+defer file.Close()
+
+scanner := bufio.NewScanner(file)
+for scanner.Scan() {
+	fmt.Println(scanner.Text())
+}
+
+if err := scanner.Err(); err != nil {
+	log.Fatalf("Ошибка чтения: %v", err)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Конструктору всё равно, что именно в него передали — важно лишь, что параметр удовлетворяет <code>io.Reader</code>. Дальше <code>scanner</code> сам режет поток по токенам (по умолчанию — по <code>\n</code>).</p>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// ограничения Scanner</span>
+        <p>Буфер ограничен 64 КБ и рассчитан на текст, а не бинарные блоки — полного контроля над чтением он не даёт. <code>scanner.Split(bufio.ScanWords)</code> перед первым <code>Scan()</code> переключает разбиение на пословное вместо построчного — можно читать и по рунам. Для длинных строк, бинарных данных и более серьёзного контроля смотри в сторону <code>bufio.NewReader(io.Reader)</code> — самостоятельно.</p>
+      </div>
+      <p>Читать можно и не строго последовательно — интерфейс <code>io.Seeker</code> позволяет прыгать на произвольное место в файле:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>file.Seek(0, io.SeekStart) // Вернуться к самому началу файла</code></pre>
+      </div>
+      <p class="prose-muted"><code>io.SeekStart</code> задаёт точку отсчёта — <a href="https://github.com/golang/go/blob/go1.25.6/src/io/io.go#L21">в пакете есть</a> ещё пара таких констант.</p>
+    </section>
+
+    <!-- 04 Файловая система -->
+    <section class="section" id="fs">
+      <div class="section__head"><span class="section__num">04</span><h2>Обход файловой системы</h2></div>
+      <p>Работа с папками, файлами и путями на диске — базовый навык. За неё отвечают <code>os</code> и <code>path/filepath</code>. Разберём несколько ключевых функций, остальное — самостоятельно.</p>
+
+      <h3>Создание директорий</h3>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>err := os.MkdirAll("data/logs", 0755) // Создаст всю цепочку каталогов
+if err != nil {
+	log.Fatal(err)
+}</code></pre>
+      </div>
+      <p class="prose-muted"><code>os.Mkdir</code> создаёт одну директорию; <code>os.MkdirAll</code> — сразу всю недостающую цепочку.</p>
+
+      <h3>Чтение содержимого директории</h3>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>entries, err := os.ReadDir("./data")
+if err != nil {
+	log.Fatal(err)
+}
+
+for _, entry := range entries {
+	if entry.IsDir() {
+		fmt.Println("Каталог:", entry.Name())
+	} else {
+		fmt.Println("Файл:", entry.Name())
+	}
+}</code></pre>
+      </div>
+
+      <h3>Рекурсивный обход</h3>
+      <p class="prose-muted">Обходить дерево вручную не нужно — есть готовый рекурсивный обход. <code>filepath.WalkDir</code> предпочтительнее устаревающего <code>filepath.Walk</code>: работает с лёгким <code>DirEntry</code> вместо <code>FileInfo</code>, не открывает файлы без необходимости и экономит системные вызовы.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
+	if err != nil {
+		return err
+	}
+	if !d.IsDir() {
+		fmt.Println(path)
+	}
+	return nil
+})</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TB
+  ROOT["."] --> A["cmd/"]
+  ROOT --> B["internal/"]
+  A --> A1["main.go"]
+  B --> B1["config.go"]
+  B --> B2["server.go"]
+  ROOT -.->|"на каждый узел вызывает"| CB["обработчик обхода(path, d, err)"]
+        </pre>
+        <p class="diagram-caption">WalkDir рекурсивно обходит дерево и на каждый файл/каталог вызывает твою функцию-обработчик</p>
+      </div>
+      <p class="prose-muted"><em>Обработчик обхода</em> — функция, которая вызывается на каждый элемент дерева; вся пользовательская логика живёт именно в ней.</p>
+
+      <h3>Аргументы и флаги</h3>
+      <p>Самый простой способ получить аргументы запуска — глобальная переменная <code>os.Args</code>, слайс строк, заполняемый в <code>init()</code> ещё до старта <code>main</code>. Нулевой индекс — не пользовательский аргумент, а путь к самой программе:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	fmt.Println("Количество аргументов:", len(os.Args)-1)
+	fmt.Println("Название программы:", os.Args[0])
+
+	if len(os.Args) > 1 {
+		fmt.Println("Аргументы:")
+		for i, arg := range os.Args[1:] {
+			fmt.Printf("  %d: %s\n", i+1, arg)
+		}
+	}
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go run main.go hello world 123
+
+# Количество аргументов: 3
+# Название программы: /tmp/go-build123456/b001/main
+# Аргументы:
+#   1: hello
+#   2: world
+#   3: 123</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// почему -1</span>
+        <p><code>os.Args[0]</code> — всегда путь к бинарнику (при <code>go run</code> — путь к временному файлу), присутствует даже без единого пользовательского аргумента. Сами аргументы начинаются с индекса 1.</p>
+      </div>
+
+      <p>Для именованных параметров с типизацией, значениями по умолчанию и авто-справкой — пакет <code>flag</code>. Он сам понимает разные форматы записи (<code>-name=value</code>, <code>-name value</code>, <code>--name value</code>), а булевы флаги можно указывать без значения:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	var (
+		name    = flag.String("name", "Мир", "имя для приветствия")
+		count   = flag.Int("count", 1, "количество повторений")
+		verbose = flag.Bool("verbose", false, "подробный вывод")
+	)
+
+	flag.Parse() // Вызывать после объявления всех флагов
+
+	if *verbose {
+		fmt.Printf("Выполняется приветствие с параметрами: name=%s, count=%d\n", *name, *count)
+	}
+
+	for range *count {
+		fmt.Printf("Привет, %s!\n", *name)
+	}
+}</code></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go run main.go -name="Алиса" -count=3 -verbose
+
+# Выполняется приветствие с параметрами: name=Алиса, count=3
+# Привет, Алиса!
+# Привет, Алиса!
+# Привет, Алиса!</code></pre>
+      </div>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p>Узнать «а был ли флаг указан явно» напрямую нельзя — поэтому значение по умолчанию нужно задавать всегда.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><code>name</code>, <code>count</code> и <code>verbose</code> — указатели, их нужно разыменовывать <code>*name</code>. При этом пакет всегда их инициализирует, так что проверка на <code>nil</code> не требуется.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><code>flag</code> не следует стилю GNU: <code>-flag</code> и <code>--flag</code> для него идентичны. В экосистеме Go принято использовать один дефис.</p></div>
+      </div>
+      <p class="prose-muted">После флагов можно принимать и неименованные аргументы — список файлов, URL, что угодно, как в привычных Unix-утилитах (<code>ls -l file1 file2</code>, <code>grep -n "pattern" *.txt</code>):</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	var prefix = flag.String("prefix", "", "префикс для файлов")
+	flag.Parse()
+
+	files := flag.Args() // Неименованные аргументы
+
+	if len(files) == 0 {
+		fmt.Println("Не указаны файлы для обработки")
+		return
+	}
+
+	fmt.Printf("Обрабатываем %d файлов:\n", len(files))
+	for _, file := range files {
+		fmt.Printf("- %s%s\n", *prefix, file)
+	}
+}</code></pre>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <ul class="source-list">
+      <li><a href="https://habr.com/ru/articles/306914/"><span class="arrow">↗</span>«Разбираемся в Go: пакет io»</a></li>
+      <li><a href="https://proglib.io/p/samouchitel-po-go-dlya-nachinayushchih-chast-14-interfeysy-vvoda-vyvoda-buferizaciya-rabota-s-faylami-pakety-io-bufio-os-2024-07-18"><span class="arrow">↗</span>«Самоучитель по Go для начинающих» — часть 14</a></li>
+      <li><a href="https://medium.com/@andreiboar/fundamentals-of-i-o-in-go-c893d3714deb"><span class="arrow">↗</span>Fundamentals of I/O in Go</a></li>
+      <li><a href="https://medium.com/@emusbeny/mastering-bufio-in-go-the-art-of-buffered-i-o-17cae584ee4b"><span class="arrow">↗</span>Go Fast with bufio</a></li>
+      <li><a href="https://chriswilcox.dev/blog/2024/04/09/Scan-vs-Read-in-bufio.html"><span class="arrow">↗</span>Comparing bufio.Scanner and bufio.Reader</a></li>
+      <li><a href="https://gobyexample.com/command-line-flags"><span class="arrow">↗</span>Go by Example: Command-Line Flags</a></li>
+      <li><a href="https://renaldid.medium.com/using-golang-flags-for-dynamic-command-line-arguments-best-practices-and-examples-78f3f33f3b3b"><span class="arrow">↗</span>Using Golang Flags for Dynamic CLI Arguments</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 8 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  function highlightComments(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(/(\/\/.*$|#.*$)/gm, '<span class="tok-c">$1</span>');
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+  document.querySelectorAll("pre.code-bash code").forEach(function(el){ el.innerHTML = highlightComments(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

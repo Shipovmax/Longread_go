@@ -1,0 +1,1115 @@
+<title>Азбука Go</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ============ Design tokens ============ */
+  :root{
+    --bg:#f4f6fa;
+    --surface:#ffffff;
+    --surface-2:#eef1f7;
+    --surface-3:#e2e7f0;
+    --border:#dbe1ec;
+    --text:#10192b;
+    --text-muted:#4b5875;
+    --text-faint:#8390a9;
+    --accent:#0891a8;
+    --accent-rgb:8,145,168;
+    --accent-2:#a85f0a;
+    --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120;
+    --code-text:#dde4f4;
+    --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px;
+    --radius-m:7px;
+
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120;
+      --surface:#121b2e;
+      --surface-2:#162135;
+      --surface-3:#1d2b45;
+      --border:#243352;
+      --text:#e7edf6;
+      --text-muted:#93a3bf;
+      --text-faint:#5e6d8a;
+      --accent:#45d3da;
+      --accent-rgb:69,211,218;
+      --accent-2:#f2a75c;
+      --accent-2-rgb:242,167,92;
+      --code-bg:#070b15;
+      --code-text:#dde4f4;
+      --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120;
+    --surface:#121b2e;
+    --surface-2:#162135;
+    --surface-3:#1d2b45;
+    --border:#243352;
+    --text:#e7edf6;
+    --text-muted:#93a3bf;
+    --text-faint:#5e6d8a;
+    --accent:#45d3da;
+    --accent-rgb:69,211,218;
+    --accent-2:#f2a75c;
+    --accent-2-rgb:242,167,92;
+    --code-bg:#070b15;
+    --code-text:#dde4f4;
+    --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  /* ============ Reset-ish ============ */
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:17px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent);text-decoration-color:rgba(var(--accent-rgb),.35);text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;
+  }
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+
+  h1,h2,h3,h4{
+    font-family:var(--font-display);
+    font-weight:700;
+    text-wrap:balance;
+    color:var(--text);
+    margin:0;
+  }
+  p{margin:0;}
+  ul,ol{margin:0;padding:0;}
+
+  /* ============ Progress bar ============ */
+  #progress{
+    position:fixed; top:0; left:0; height:3px; width:0%;
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    z-index:100; transition:width .1s linear;
+  }
+
+  /* ============ Masthead ============ */
+  .masthead{
+    position:relative;
+    padding:5.5rem 1.5rem 4rem;
+    overflow:hidden;
+    border-bottom:1px solid var(--border);
+    background:
+      radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%),
+      radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);
+  }
+  .masthead__grid{
+    position:absolute; inset:0; opacity:.5;
+    background-image:
+      linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px;
+    mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);
+  }
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:.6em;
+    font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1);
+    border:1px solid rgba(var(--accent-rgb),.3);
+    padding:.35em .8em; border-radius:100px;
+  }
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{
+    margin-top:1.1rem;
+    font-size:clamp(2.4rem, 6vw, 4rem);
+    letter-spacing:-.01em;
+    line-height:1.04;
+  }
+  .cursor{
+    display:inline-block; width:.5em; margin-left:.06em;
+    background:var(--accent); height:.78em; transform:translateY(.06em);
+    animation:blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{
+    margin-top:1.1rem; max-width:56ch;
+    font-size:1.18rem; color:var(--text-muted); font-style:italic;
+  }
+  .meta-row{
+    margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem;
+    font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);
+  }
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  /* ============ Shell / layout ============ */
+  .page-shell{
+    max-width:1180px; margin:0 auto;
+    display:grid; grid-template-columns:220px minmax(0,1fr);
+    gap:3.5rem; padding:3.5rem 1.5rem 6rem;
+  }
+  @media (max-width:920px){
+    .page-shell{grid-template-columns:1fr; padding-top:2rem;}
+  }
+
+  /* ============ TOC ============ */
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{
+    display:flex; gap:.6em; color:var(--text-muted); text-decoration:none;
+    font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s);
+    border-left:2px solid transparent;
+  }
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{
+      display:block; margin-bottom:1rem;
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);
+    }
+    details.toc-mobile summary{
+      cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono);
+      font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);
+    }
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  /* ============ Content ============ */
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .section p{color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){
+    font-family:var(--font-mono); font-size:.88em;
+    background:var(--surface-2); border:1px solid var(--border);
+    padding:.1em .4em; border-radius:4px; color:var(--accent);
+  }
+
+  /* ============ Chips ============ */
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{
+    font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted);
+    background:var(--surface-2); border:1px solid var(--border);
+    padding:.35em .8em; border-radius:100px;
+  }
+
+  /* ============ Pros / cons ============ */
+  .spec-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:.4rem;}
+  @media (max-width:640px){.spec-grid{grid-template-columns:1fr;}}
+  .spec-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.3rem 1.4rem; box-shadow:var(--shadow);}
+  .spec-card h4{margin-bottom:.9rem; display:flex; align-items:center; gap:.5em;}
+  .spec-card.pro h4{color:var(--accent);}
+  .spec-card.con h4{color:var(--accent-2);}
+  .spec-card ul{display:flex; flex-direction:column; gap:.55rem; list-style:none;}
+  .spec-card li{position:relative; padding-left:1.4em; font-size:.97rem; color:var(--text-muted);}
+  .spec-card.pro li::before{content:"+"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.con li::before{content:"–"; position:absolute; left:0; color:var(--accent-2); font-family:var(--font-mono); font-weight:700;}
+
+  /* ============ Callouts ============ */
+  .callout{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;
+  }
+  .callout-tag{
+    font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em;
+    text-transform:lowercase; width:fit-content;
+  }
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  /* ============ Code blocks ============ */
+  .code-block{
+    border:1px solid var(--code-border); border-radius:var(--radius-m);
+    overflow:hidden; box-shadow:var(--shadow); max-width:100%;
+  }
+  .code-block__bar{
+    display:flex; align-items:center; justify-content:space-between;
+    background:#0f1524; border-bottom:1px solid var(--code-border);
+    padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;
+  }
+  :root[data-theme="light"] .code-block__bar{background:#0f1524;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{
+    margin:0; padding:1.15rem 1.3rem; overflow-x:auto;
+    background:var(--code-bg); color:var(--code-text);
+  }
+  pre.code-go code, pre.code-bash code{
+    font-family:var(--font-mono); font-size:.88rem; line-height:1.65;
+    white-space:pre;
+  }
+  .tok-c{color:#6c7fa3; font-style:italic;}
+  .tok-s{color:#8fd694;}
+  .tok-k{color:#f2a75c;}
+  .tok-t{color:#45d3da;}
+  .tok-n{color:#c9a6f7;}
+
+  /* ============ Annotated glossary ============ */
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{
+    font-family:var(--font-mono); font-size:.9rem; color:var(--accent);
+    background:var(--surface-2); display:inline-block; padding:.15em .55em;
+    border-radius:4px; margin-bottom:.4rem;
+  }
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  /* ============ Tables ============ */
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table caption{text-align:left; padding:.7rem 1rem; font-family:var(--font-body); font-style:italic; color:var(--text-faint); font-size:.85rem; border-bottom:1px solid var(--border);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{
+    font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--text-muted); background:var(--surface-2);
+  }
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+
+  /* ============ Diagrams ============ */
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  /* ============ Compare (кириллица/латиница) ============ */
+  .compare{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:.2rem;}
+  @media (max-width:640px){.compare{grid-template-columns:1fr;}}
+  .compare__col{background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden;}
+  .compare__col h4{font-family:var(--font-mono); font-size:.75rem; color:#9fb0cc; padding:.7em 1em; margin:0; border-bottom:1px solid var(--code-border); text-transform:none; letter-spacing:0;}
+  .compare__col ol{font-family:var(--font-mono); font-size:.85rem; color:var(--code-text); padding:.9em 1.2em; display:flex; flex-direction:column; gap:.35em; list-style:none;}
+  .compare__col li{display:flex; justify-content:space-between; gap:1em;}
+  .compare__col li.diff{color:var(--accent-2); font-weight:600;}
+
+  /* ============ For-loop grid ============ */
+  .loop-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem;}
+  @media (max-width:760px){.loop-grid{grid-template-columns:1fr;}}
+  .loop-card h4{margin-bottom:.6rem;}
+  .loop-card p{font-size:.92rem; color:var(--text-muted); margin-bottom:.6rem; max-width:none;}
+
+  /* ============ Mini-cards for logical ops ============ */
+  .op-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;}
+  @media (max-width:760px){.op-grid{grid-template-columns:1fr;}}
+  .op-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.2rem 1.3rem; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:.7rem;}
+  .op-card .op-symbol{font-family:var(--font-mono); font-size:1.4rem; color:var(--accent);}
+  .op-card p{font-size:.9rem; color:var(--text-muted); max-width:none;}
+
+  /* ============ Footer / sources ============ */
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.4rem;}
+  footer.sources h2{font-size:1.3rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 1 из 11</span>
+    <h1 class="title">Азбука Go<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Откуда взялся язык, из чего слеплена его философия и как дойти от пустого файла до первой скомпилированной программы — с типами, ветвлениями и циклами по пути.</p>
+    <div class="meta-row">
+      <span><b>~18 мин</b> чтения</span>
+      <span><b>10</b> разделов</span>
+      <span><b>с нуля</b>, без предзнаний</span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#history"><span class="n">01</span>История и философия</a></li>
+        <li><a href="#install"><span class="n">02</span>Установка окружения</a></li>
+        <li><a href="#hello-world"><span class="n">03</span>Hello World</a></li>
+        <li><a href="#build-run"><span class="n">04</span>Сборка и кросс-компиляция</a></li>
+        <li><a href="#fmt"><span class="n">05</span>Форматирование</a></li>
+        <li><a href="#envvars"><span class="n">06</span>Переменные окружения</a></li>
+        <li><a href="#types"><span class="n">07</span>Переменные и типы</a></li>
+        <li><a href="#control"><span class="n">08</span>Ветвления</a></li>
+        <li><a href="#logic"><span class="n">09</span>Логические операторы</a></li>
+        <li><a href="#loops"><span class="n">10</span>Циклы</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#history"><span class="n">01</span>История и философия</a></li>
+      <li><a href="#install"><span class="n">02</span>Установка окружения</a></li>
+      <li><a href="#hello-world"><span class="n">03</span>Hello World</a></li>
+      <li><a href="#build-run"><span class="n">04</span>Сборка и кросс-компиляция</a></li>
+      <li><a href="#fmt"><span class="n">05</span>Форматирование</a></li>
+      <li><a href="#envvars"><span class="n">06</span>Переменные окружения</a></li>
+      <li><a href="#types"><span class="n">07</span>Переменные и типы</a></li>
+      <li><a href="#control"><span class="n">08</span>Ветвления</a></li>
+      <li><a href="#logic"><span class="n">09</span>Логические операторы</a></li>
+      <li><a href="#loops"><span class="n">10</span>Циклы</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 История -->
+    <section class="section" id="history">
+      <div class="section__head"><span class="section__num">01</span><h2>История и философия Go</h2></div>
+      <p>Go — компилируемый, статически типизированный язык со встроенной конкурентностью. Google разрабатывала его с 2007 года не только ради производительности высоконагруженных серверов, но и ради продуктивности самих разработчиков. Массовую популярность язык начал набирать примерно с 2012 года — и с тех пор не сбавляет темп.</p>
+      <p>У Google было чёткое техническое задание. Язык должен быть максимально простым в изучении и в бою. Поэтому в его дизайне сознательно отказались от классического ООП с наследованием и иерархиями классов в пользу более простых механизмов — структур и интерфейсов (о них ещё поговорим). Авторы языка — Роберт Гризмер, Роб Пайк и Кен Томпсон — до Go успели написать компиляторы на C++ и поработать над Unix и Plan 9. Из этого опыта в Go перекочевали:</p>
+      <ul class="plain">
+        <li>быстрая компиляция;</li>
+        <li>кросс-платформенность — сборка под любую ОС и архитектуру из одного исходника;</li>
+        <li>богатая стандартная библиотека — включая сеть и тестирование из коробки;</li>
+        <li>автоматическое управление памятью через сборщик мусора;</li>
+        <li>конкурентность как часть языка, а не надстройка над ним.</li>
+      </ul>
+
+      <div class="spec-grid">
+        <div class="spec-card pro">
+          <h4>Плюсы</h4>
+          <ul>
+            <li>Низкий порог входа</li>
+            <li>Статическая типизация — ошибки ловятся на компиляции</li>
+            <li>Простой, минималистичный синтаксис</li>
+            <li>Богатая стандартная библиотека</li>
+            <li>Многопоточность на уровне языка — горутины</li>
+            <li>Самодостаточность и кросс-платформенность</li>
+            <li>Автоматическая работа с памятью</li>
+          </ul>
+        </div>
+        <div class="spec-card con">
+          <h4>Минусы</h4>
+          <ul>
+            <li>Нет классического ООП</li>
+            <li>Осознанный отказ от привычных концепций (дженерики появились лишь пару лет назад)</li>
+            <li>Нишевость — силён в бэкенде и облаке, слаб вне этой области</li>
+            <li>Статическая типизация — да, и это тоже минус</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout callout-note">
+        <span class="callout-tag">// на заметку</span>
+        <p>Статическая типизация — одновременно и в плюсах, и в минусах. Это две стороны одной монеты: она ловит ошибки на этапе компиляции ценой того, что динамическая типизация порой позволяет писать быстрее и лаконичнее.</p>
+      </div>
+
+      <p>На Go написана добрая часть современной инфраструктуры:</p>
+      <div class="chips">
+        <span class="chip">Docker</span>
+        <span class="chip">Kubernetes</span>
+        <span class="chip">Prometheus</span>
+        <span class="chip">Grafana</span>
+        <span class="chip">Uber</span>
+        <span class="chip">TiMe (форк Mattermost)</span>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  A["2007
+Старт разработки
+в Google"] --> B["2009
+Открытый релиз"] --> C["~2012
+Начало массового
+роста популярности"] --> D["Сегодня
+Docker · Kubernetes
+Prometheus · Grafana"]
+        </pre>
+        <p class="diagram-caption">Путь языка от внутреннего проекта Google до инфраструктурного стандарта</p>
+      </div>
+    </section>
+
+    <!-- 02 Установка -->
+    <section class="section" id="install">
+      <div class="section__head"><span class="section__num">02</span><h2>Установка и настройка окружения</h2></div>
+      <p>Инструкции по установке отличаются в зависимости от ОС:</p>
+      <ul class="plain">
+        <li><a href="https://timeweb.cloud/tutorials/go/ustanovka-go-na-ubuntu">Go на Ubuntu</a></li>
+        <li><a href="https://timeweb.cloud/tutorials/go/ustanovka-go-na-macos">Go на macOS</a></li>
+        <li><a href="https://timeweb.cloud/tutorials/go/ustanovka-go-na-windows">Go на Windows</a></li>
+      </ul>
+      <p class="prose-muted">Общая официальная инструкция — <a href="https://go.dev/doc/install">тут</a>. Проверить, что установка прошла успешно, можно одной командой:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go version</code></pre>
+      </div>
+    </section>
+
+    <!-- 03 Hello World -->
+    <section class="section" id="hello-world">
+      <div class="section__head"><span class="section__num">03</span><h2>Первая программа: Hello World</h2></div>
+      <p>Окружение готово — пишем первую программу. Создай файл <code>hello_world.go</code> с приветствием:</p>
+
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">hello_world.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package main
+
+import "fmt"
+
+/*
+	Многострочный
+	комментарий
+*/
+
+func main() {
+	fmt.Println("Hello, world!") // Выводим в консоль
+}</code></pre>
+      </div>
+
+      <p>Разберём код по частям:</p>
+      <dl class="glossary">
+        <div><dt>package</dt><dd>Базовая единица любого Go-кода. Пакеты — основной способ организации кодовой базы, обычно по функционалу. <code>package main</code> обязателен в любой программе (не библиотеке) — это точка входа. Пакет ограничивает видимость неэкспортируемых имён своими границами.</dd></div>
+        <div><dt>import</dt><dd>Подключает код одного пакета в другой. Здесь мы импортируем <code>fmt</code> из стандартной библиотеки — пакет для форматирования данных.</dd></div>
+        <div><dt>func main() {...}</dt><dd>Функция, с которой начинается выполнение любой программы. Без неё приложение не запустится. Обрати внимание: строки кода ничем не заканчиваются — точку с запятой Go расставляет сам на этапе компиляции.</dd></div>
+        <div><dt>// и /* */</dt><dd>Однострочные и многострочные комментарии — оба варианта поддерживаются нативно.</dd></div>
+      </dl>
+
+      <div class="callout callout-note">
+        <span class="callout-tag">// программы vs библиотеки</span>
+        <p>В программах и сервисах всегда есть пакет <code>main</code> с одноимённой функцией — точкой входа. Библиотеки же — это набор пакетов, объединённых одной логикой, без <code>main</code>, созданный ради конкретного функционала (обработка строк, конвертация форматов и т. д.). Эталонный пример — сам исходный код Go.</p>
+      </div>
+    </section>
+
+    <!-- 04 Сборка -->
+    <section class="section" id="build-run">
+      <div class="section__head"><span class="section__num">04</span><h2>Сборка и кросс-платформенная разработка</h2></div>
+      <p>Написать программу мало — её нужно скомпилировать и запустить, чтобы убедиться в отсутствии ошибок:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go build hello_world.go</code></pre>
+      </div>
+      <p class="prose-muted">Команда соберёт исполняемый файл под ту ОС и архитектуру, в которой она выполняется (для Windows это будет <code>hello_world.exe</code>). Запусти файл — увидишь результат в консоли.</p>
+
+      <p>Кросс-платформенность в других языках часто даётся через боль. В Go это пара переменных окружения перед той же командой:</p>
+      <ul class="plain">
+        <li><code>GOOS</code> — целевая операционная система;</li>
+        <li><code>GOARCH</code> — целевая архитектура.</li>
+      </ul>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>GOOS=windows GOARCH=amd64 go build hello_world.go</code></pre>
+      </div>
+      <p class="prose-muted">Не укажешь переменные — компилятор сам определит параметры текущей системы.</p>
+
+      <p>Но чаще всего в разработке нужен более быстрый цикл:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go run hello_world.go</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  S["hello_world.go"]
+  S -->|"go build"| B["исполняемый
+файл на диске"]
+  B -->|"запуск вручную"| O["Hello, world!"]
+  S -->|"go run"| T["временный
+бинарник"]
+  T -->|"выполняется"| O
+  T -.->|"удаляется
+после запуска"| X["—"]
+        </pre>
+        <p class="diagram-caption"><code>go run</code> — это <code>go build</code> + запуск + удаление бинарника одной командой</p>
+      </div>
+    </section>
+
+    <!-- 05 Форматирование -->
+    <section class="section" id="fmt">
+      <div class="section__head"><span class="section__num">05</span><h2>Форматирование</h2></div>
+      <p>Go требователен к стандарту оформления кода — и именно это делает любую чужую (и свою старую) Go-кодовую базу читаемой. Инструмент для авто-форматирования встроен из коробки:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go fmt ./...</code></pre>
+      </div>
+      <p class="prose-muted">Команда приводит отступы, пробелы и переносы строк к единому стилю, а заодно убирает лишние пробелы и причёсывает выражения.</p>
+    </section>
+
+    <!-- 06 Переменные окружения -->
+    <section class="section" id="envvars">
+      <div class="section__head"><span class="section__num">06</span><h2>Переменные окружения</h2></div>
+      <p>Go активно использует переменные окружения — пары «ключ – значение», хранящиеся в ОС, — чтобы настраивать собственное поведение. Посмотреть текущее состояние своих Go-переменных можно так:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">терминал</span><span class="code-block__lang">bash</span></div>
+        <pre class="code-bash"><code>go env</code></pre>
+      </div>
+      <p class="prose-muted">В терминале появится список переменных и их текущих значений — это знание ещё пригодится нам в настройке языка.</p>
+    </section>
+
+    <!-- 07 Переменные и типы -->
+    <section class="section" id="types">
+      <div class="section__head"><span class="section__num">07</span><h2>Переменные и типы данных</h2></div>
+
+      <h3>Базовые типы</h3>
+      <p>Как и в любом языке, в Go есть набор фундаментальных типов, с которыми мы будем работать весь курс: целые числа, числа с плавающей точкой, логический тип и строки.</p>
+
+      <h4>Целые числа</h4>
+      <p>Бывают со знаком и без — <code>int</code> и <code>uint</code> соответственно. Важна разрядность: <code>int8</code> — целое со знаком на 8 бит, а без указанной разрядности (просто <code>int</code>) компилятор сам подберёт 32 или 64 бита в зависимости от архитектуры сборки.</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Тип</th><th>Описание</th><th>Примеры</th></tr></thead>
+          <tbody>
+            <tr><td class="type">int</td><td>Зависит от архитектуры (32/64 бита)</td><td>42, -10</td></tr>
+            <tr><td class="type">int32</td><td>от −2 147 483 648 до 2 147 483 647</td><td>-100000, 2147483647</td></tr>
+            <tr><td class="type">int64</td><td>от −9 223 372 036 854 775 808 до 9 223 372 036 854 775 807</td><td>-5000000000</td></tr>
+            <tr><td class="type">uint</td><td>Беззнаковое, зависит от архитектуры</td><td>0, 100256</td></tr>
+            <tr><td class="type">uint32</td><td>от 0 до 4 294 967 295</td><td>0, 42</td></tr>
+            <tr><td class="type">uint64</td><td>от 0 до 18 446 744 073 709 551 615</td><td>0, 101</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Числа с плавающей точкой</h4>
+      <p>Два типа: <code>float32</code> (6–7 значащих цифр) и <code>float64</code> (15–17 значащих цифр), оба по стандарту IEEE 754. Первый — когда точность не критична, второй — выбор по умолчанию для большинства вычислений.</p>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// важно</span>
+        <p>Эти типы <strong>не годятся</strong> для денег и финансовых расчётов. Подумай, почему — и загляни в источники внизу за подсказкой про представление дробей в двоичном виде.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Тип</th><th>Описание</th><th>Примеры</th></tr></thead>
+          <tbody>
+            <tr><td class="type">float32</td><td>Одинарная точность (32 бита)</td><td>3.14, -0.0001</td></tr>
+            <tr><td class="type">float64</td><td>Двойная точность (64 бита)</td><td>3.141592653589793</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Логический тип</h4>
+      <p><code>bool</code> — 1 байт, значения <code>true</code> или <code>false</code>. Строго отделён от чисел: попытка подставить <code>1</code> и <code>0</code> вместо <code>true</code>/<code>false</code> — ошибка компиляции, а не «сработает как в C».</p>
+
+      <h4>Строки</h4>
+      <p>Под капотом <code>string</code> — это последовательность байтов. Формально кодировка не навязывается, но по умолчанию ожидаются UTF-8-байты, представляющие Unicode-кодовые точки. По строке можно пройтись циклом:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>for i, ch := range "hello" {
+	fmt.Println("Номер: ", i, ", символ: ", ch)
+}</code></pre>
+      </div>
+      <p class="prose-muted">В выводе будут не буквы, а числа — Unicode-коды символов (101 — код латинской <code>e</code>). А если заменить латиницу на кириллицу, индексы «поедут»:</p>
+
+      <div class="compare">
+        <div class="compare__col">
+          <h4>range "hi" — латиница</h4>
+          <ol>
+            <li><span>индекс 0</span><span>символ 104 (h)</span></li>
+            <li><span>индекс 1</span><span>символ 101 (e)</span></li>
+            <li><span>индекс 2</span><span>символ 108 (l)</span></li>
+            <li><span>индекс 3</span><span>символ 108 (l)</span></li>
+            <li><span>индекс 4</span><span>символ 111 (o)</span></li>
+          </ol>
+        </div>
+        <div class="compare__col">
+          <h4>range "hи..." — кириллица</h4>
+          <ol>
+            <li><span>индекс 0</span><span>символ 104 (h)</span></li>
+            <li><span>индекс 1</span><span>символ 1077 (е)</span></li>
+            <li class="diff"><span>индекс 3</span><span>символ 108 (l) ← не 2!</span></li>
+            <li><span>индекс 4</span><span>символ 108 (l)</span></li>
+            <li><span>индекс 5</span><span>символ 111 (o)</span></li>
+          </ol>
+        </div>
+      </div>
+      <p class="prose-muted">Причина — кириллица кодируется двумя байтами, и Go честно отражает это в индексах при обходе строки.</p>
+
+      <p>Строка — массив байтов, поэтому к её элементам можно обращаться по индексу. Но так ты получишь доступ не к символу, а к конкретному байту — будь внимателен. А чтобы узнать <em>количество байтов</em>, используется <code>len()</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>package main
+
+import "fmt"
+
+func main() {
+	fmt.Println(len("hello"))
+	fmt.Println(len("привет"))
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// подвох</span>
+        <p>Ожидаешь 5 и 6? Получишь 5 и 12. Каждый символ кириллицы кодируется двумя байтами, и <code>len()</code> честно считает именно байты, а не буквы. Способ посчитать реальное число символов — отличная тема для самостоятельного поиска.</p>
+      </div>
+
+      <p><strong>Самое важное: строки в Go неизменяемы.</strong> Изменить символ по индексу нельзя. Конкатенация не «дописывает» в существующую строку — она создаёт новую:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>s1 := "Строка "
+s2 := "и еще строка"
+s1 = s1 + s2
+fmt.Println(s1)</code></pre>
+      </div>
+      <p class="prose-muted">Результат ожидаем, но под новое значение выделяется новая область памяти. Если конкатенация происходит часто, в пакете <code>strings</code> стандартной библиотеки есть <code>Builder</code>, ускоряющий именно этот сценарий — там же масса других полезных функций для строк.</p>
+
+      <h4>Более хитрые типы</h4>
+      <p>В Go есть типы-синонимы — синтаксические обёртки над уже знакомыми типами:</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Тип</th><th>Описание</th><th>Примеры</th></tr></thead>
+          <tbody>
+            <tr><td class="type">byte</td><td>Синоним <code>uint8</code>, представляет байт</td><td>'a', 97</td></tr>
+            <tr><td class="type">rune</td><td>Синоним <code>int32</code>, представляет Unicode-символ</td><td>'ы', 0x0000044B</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted">Руна — это как раз то, что мы получаем, проходя циклом по строке: Go склеивает байты в единый символ (напомним, кириллица — два байта), и с руной уже можно работать как с отдельным символом.</p>
+
+      <h3>Способы определения переменных</h3>
+      <p>Классическое полное определение — с ключевым словом, именем, типом и значением:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var i int = 1
+var w float64 = 12.5</code></pre>
+      </div>
+      <p class="prose-muted">Тип нужен только тогда, когда он не выводится автоматически из значения (или должен отличаться от вывода по умолчанию), поэтому его часто опускают:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var i = 1         // int
+var w = 12.5      // float64
+var name = "John" // string</code></pre>
+      </div>
+
+      <p>Если значения нет, переменная получает «нулевое» значение для своего типа:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var i int          // 0
+var w float64      // 0.0
+var isPresent bool // false
+var name string    // ""</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// zero value</span>
+        <p>Переменная, объявленная без инициализации, автоматически получает «нулевое значение» своего типа. Так в Go в принципе не существует неинициализированной памяти — переменной безопасно пользоваться сразу после объявления.</p>
+      </div>
+
+      <p>Несколько переменных можно объявить одним блоком:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var i, j, k int = 1, 2, 3
+var (
+	name       string = "John Doe"
+	occupation string = "gardener"
+)</code></pre>
+      </div>
+
+      <p>И самый частый в реальном коде вариант — короткое объявление через <code>:=</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>name := "John Doe"
+age := 34</code></pre>
+      </div>
+      <p class="prose-muted">Обрати внимание — это именно <code>:=</code>, а не <code>=</code>, как в Python.</p>
+
+      <h3>Преобразование типов</h3>
+      <p>В Go нет неявных преобразований между типами — целевой тип всегда указывается явно:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var i = 1
+var v float64 = float64(i)</code></pre>
+      </div>
+
+      <h3>Константы</h3>
+      <p>Неизменяемые значения, вычисляемые на этапе компиляции, объявляются через <code>const</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>const Pi = 3.14159
+
+const name string = "My name"
+const surname = "My surname"
+
+const (
+	StatusOK       = 200
+	StatusNotFound = 404
+)</code></pre>
+      </div>
+      <p class="prose-muted">Тип константы можно указать явно — а можно доверить его Go, если он не принципиален.</p>
+
+      <h3>Области видимости и экспортируемость</h3>
+      <p><em>Область видимости</em> — участок кода, где переменная, функция или константа остаются доступными. Для переменных внутри функции область видимости ограничена телом самой функции — фигурными скобками <code>{}</code>.</p>
+      <p class="prose-muted">Экспортируемость определяется регистром первой буквы имени. Имя с большой буквы — элемент экспортируемый, доступен из других пакетов проекта. Имя с маленькой — виден только внутри своего пакета.</p>
+    </section>
+
+    <!-- 08 Управляющие конструкции -->
+    <section class="section" id="control">
+      <div class="section__head"><span class="section__num">08</span><h2>Управляющие конструкции</h2></div>
+
+      <h3>if / else</h3>
+      <p>Ветвление позволяет выполнять код при выполнении условия. Условно: если тебя просят купить хлеб, а если найдётся ещё и колбаса — взять и её, псевдокодом это выглядело бы так:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">мысленный пример</span><span class="code-block__lang">не Go</span></div>
+        <pre class="code-bash"><code>покупки := func КупитьХлеб()
+
+if есть колбаса {
+	покупки + колбаса
+}</code></pre>
+      </div>
+      <p class="prose-muted">А вот так это выглядит по-настоящему:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>x := 10
+
+if x > 5 {
+	fmt.Println("x больше 5") // Текст выведется в консоль
+}</code></pre>
+      </div>
+      <ul class="plain">
+        <li>условие <code>if</code> обязано быть выражением типа <code>bool</code> — неявных преобразований нет;</li>
+        <li>условие не нужно оборачивать скобками, в отличие от многих C-подобных языков;</li>
+        <li>переменные внутри тела блока видны только внутри этого блока;</li>
+        <li>переменные, объявленные в условии оператора, видны во всей конструкции, но не за её пределами.</li>
+      </ul>
+
+      <p>Отдельная удобная возможность — объявить и инициализировать переменную прямо в условии:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>if x := getValue(); x > 0 {
+	fmt.Println("Положительное значение:", x)
+}
+// x здесь уже недоступна</code></pre>
+      </div>
+      <p class="prose-muted">Это дополнительно сужает область видимости до того единственного места, где переменная действительно нужна. Для нескольких условий — цепочка <code>else if</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>if x > 0 {
+	fmt.Println("Положительное")
+} else if x < 0 {
+	fmt.Println("Отрицательное")
+} else {
+	fmt.Println("Ноль")
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// когда стоп</span>
+        <p>Длинная цепочка <code>else if</code> быстро превращается в нечитаемую лестницу:</p>
+        <pre class="code-go" style="background:transparent;padding:0;margin-top:.3rem;"><code>if x == 1 {...} else if x == 2 {...} else if x == 3 {...}
+else if x == 4 {...} else if x == 5 {...} else if x == 6 {...}</code></pre>
+        <p>Если вариантов много — время переходить на <code>switch</code>.</p>
+      </div>
+
+      <h3 id="control-switch">switch</h3>
+      <p><code>switch</code> нужен, когда нужно выбрать один из множества сценариев, и делает такой выбор гораздо читаемее:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>switch time.Now().Weekday() {
+case time.Saturday:
+	fmt.Println("Today is Saturday")
+case time.Sunday:
+	fmt.Println("Today is Sunday")
+default:
+	fmt.Println("Today is a working day")
+}</code></pre>
+      </div>
+      <ul class="plain">
+        <li><code>switch</code> держит значение, с которым сверяются все ветки;</li>
+        <li><code>case</code> — варианты выбора; проверяются по порядку сверху вниз, первое совпадение выполняется и конструкция завершается;</li>
+        <li><code>default</code> перехватывает всё, что не подошло ни под один <code>case</code> — необязателен, но хороший тон и подстраховка от забытых сценариев.</li>
+      </ul>
+      <p><code>switch</code> может быть и без значения — тогда это эквивалент <code>switch true</code>, и в <code>case</code> можно писать условия, а не значения:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>hour := time.Now().Hour()
+switch {
+case hour < 12:
+	fmt.Println("Good morning!")
+case hour < 17:
+	fmt.Println("Good afternoon!")
+default:
+	fmt.Println("Good evening!")
+}</code></pre>
+      </div>
+      <p class="prose-muted">Управлять выполнением можно ещё двумя операторами: <code>break</code> выходит из <code>switch</code> досрочно, а <code>fallthrough</code> — в конце блока <code>case</code> — выполняет следующую ветку без проверки её условия. Так можно собирать зависимые друг от друга цепочки кейсов.</p>
+    </section>
+
+    <!-- 09 Логические операторы -->
+    <section class="section" id="logic">
+      <div class="section__head"><span class="section__num">09</span><h2>Множественные выражения</h2></div>
+      <p>Когда нужно проверить сразу несколько условий, на помощь приходят логические операторы:</p>
+
+      <div class="op-grid">
+        <div class="op-card">
+          <span class="op-symbol">&amp;&amp;</span>
+          <h4 style="margin:0;">И</h4>
+          <p><code>true</code>, если истинны оба значения.</p>
+          <pre class="code-go" style="border-radius:6px;"><code>isUser := true
+isAdmin := true
+
+if isUser &amp;&amp; isAdmin {
+	fmt.Println("Operation completed")
+}</code></pre>
+        </div>
+        <div class="op-card">
+          <span class="op-symbol">||</span>
+          <h4 style="margin:0;">ИЛИ</h4>
+          <p><code>true</code>, если истинно хотя бы одно значение.</p>
+          <pre class="code-go" style="border-radius:6px;"><code>isClosed := true
+isWeekend := false
+
+if isClosed || isWeekend {
+	fmt.Println("You can't order now")
+}</code></pre>
+        </div>
+        <div class="op-card">
+          <span class="op-symbol">!</span>
+          <h4 style="margin:0;">НЕ</h4>
+          <p>Инвертирует значение выражения.</p>
+          <pre class="code-go" style="border-radius:6px;"><code>isClosed := true
+isWeekend := true
+
+if !(isClosed || isWeekend) {
+	fmt.Println("You can order now")
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 Циклы -->
+    <section class="section" id="loops">
+      <div class="section__head"><span class="section__num">10</span><h2>Циклы</h2></div>
+      <p>В отличие от многих C-подобных языков, в Go для циклов используется только один оператор — <code>for</code>. Отдельного <code>while</code> в языке идеологически нет: всю функциональность закрывают четыре формы того же <code>for</code>.</p>
+
+      <div class="loop-grid">
+        <div class="loop-card">
+          <h4>Полная форма (C-style)</h4>
+          <p>Инициализация, условие и шаг — всё в заголовке.</p>
+          <div class="code-block">
+            <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+            <pre class="code-go"><code>sum := 0
+
+for i := 1; i < 5; i++ {
+	sum += i
+}
+
+fmt.Println(sum) // 10</code></pre>
+          </div>
+        </div>
+        <div class="loop-card">
+          <h4>Только условие (аналог while)</h4>
+          <p>Инициализация и шаг опущены — остаётся условие.</p>
+          <div class="code-block">
+            <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+            <pre class="code-go"><code>n := 1
+
+for n < 5 {
+	n *= 2
+}
+
+fmt.Println(n) // 8</code></pre>
+          </div>
+        </div>
+        <div class="loop-card">
+          <h4>Бесконечная форма</h4>
+          <p>Все три части заголовка опущены.</p>
+          <div class="code-block">
+            <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+            <pre class="code-go"><code>sum := 0
+
+for {
+	sum++
+	fmt.Println(sum) // «бесконечно» пишем числа
+}</code></pre>
+          </div>
+        </div>
+        <div class="loop-card">
+          <h4>for-range</h4>
+          <p>Для обхода строк, массивов, мап и других структур.</p>
+          <div class="code-block">
+            <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+            <pre class="code-go"><code>for i, ch := range "hello" {
+	fmt.Println("Индекс: ", i, ", значение: ", ch)
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <p class="prose-muted">Итерирование по целым числам появилось только в Go 1.22:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>for i := range 5 {
+	fmt.Println(i) // 0, 1, 2, 3, 4
+}
+
+// аналог:
+for i := 0; i < 5; i++ {
+	fmt.Println(i)
+}</code></pre>
+      </div>
+
+      <p>Цикл в цикле — практика, которой стоит по возможности избегать, но иногда без неё не обойтись. Чтобы прервать сразу все вложенные циклы, а не только внутренний, используются метки:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>sum := 0
+
+outer:
+for {
+	sum++
+	for j := 0; j < sum; j++ {
+		if j*sum == 111 {
+			break outer // выходим из ОБОИХ циклов разом
+		}
+	}
+}</code></pre>
+      </div>
+      <p class="prose-muted">Без метки <code>break</code> прервал бы только внутренний цикл, вернув выполнение во внешний бесконечный <code>for</code>.</p>
+
+      <p>Если текущая итерация уже отработала своё и нужно перейти к следующей — <code>continue</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>sum := 0
+
+for i := 1; i < 5; i++ {
+	if i%2 != 0 {
+		continue // пропустить нечётные
+	}
+
+	sum += i
+}
+
+fmt.Println(sum) // 6 (2+4)</code></pre>
+      </div>
+
+      <p>А если из пары «индекс + значение» нужен только один элемент — второй опускается через <code>_</code>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>strings := [3]string{"I", "love", "Go"} // массив — познакомимся ближе в следующей главе
+for i := range strings {
+	fmt.Println(strings[i])
+}
+
+// или только по значению:
+for _, s := range strings {
+	fmt.Println(s)
+}</code></pre>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <ul class="source-list">
+      <li><a href="https://go.dev/doc/"><span class="arrow">↗</span>Документация Go</a></li>
+      <li><a href="https://pkg.go.dev/std"><span class="arrow">↗</span>Стандартная библиотека Golang</a></li>
+      <li><a href="https://go.dev/doc/effective_go"><span class="arrow">↗</span>Effective Go — ультимативный гайд</a></li>
+      <li><a href="https://go.dev/tour/list"><span class="arrow">↗</span>Go tour</a></li>
+      <li><a href="https://gobyexample.com"><span class="arrow">↗</span>Go by example</a></li>
+      <li><a href="https://pkg.go.dev/strings"><span class="arrow">↗</span>Пакет strings — стандартная библиотека</a></li>
+      <li><a href="https://go.dev/blog/strings"><span class="arrow">↗</span>Роб Пайк — «Строки, байты и руны»</a></li>
+      <li><a href="https://go.dev/blog/constants"><span class="arrow">↗</span>Роб Пайк — «Константы»</a></li>
+      <li><a href="https://timeweb.cloud/tutorials/go/stroki-v-go"><span class="arrow">↗</span>Строки в Go: знакомство и начало работы</a></li>
+      <li><a href="https://go.dev/blog/gofmt"><span class="arrow">↗</span>Эндрю Джерард — «go fmt в твой код»</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 1 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Go syntax highlighting ----------
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){
+    el.innerHTML = highlightGo(el.textContent);
+  });
+
+  // ---------- Reading progress ----------
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  // ---------- TOC active state ----------
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var byId = {};
+    links.forEach(function(l){ byId[l.getAttribute("href").slice(1)] = l; });
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>

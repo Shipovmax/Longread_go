@@ -1,0 +1,948 @@
+<title>Дирижёр горутин</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f6fa; --surface:#ffffff; --surface-2:#eef1f7; --surface-3:#e2e7f0; --border:#dbe1ec;
+    --text:#10192b; --text-muted:#4b5875; --text-faint:#8390a9;
+    --accent:#0891a8; --accent-rgb:8,145,168; --accent-2:#a85f0a; --accent-2-rgb:168,95,10;
+    --code-bg:#0c1120; --code-text:#dde4f4; --code-border:#232f47;
+    --shadow: 0 1px 2px rgba(16,25,43,.06), 0 10px 28px -14px rgba(16,25,43,.16);
+    --radius-s:4px; --radius-m:7px;
+    --font-display:'Unbounded', ui-sans-serif, system-ui, sans-serif;
+    --font-body:'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+      --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+      --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+      --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1120; --surface:#121b2e; --surface-2:#162135; --surface-3:#1d2b45; --border:#243352;
+    --text:#e7edf6; --text-muted:#93a3bf; --text-faint:#5e6d8a;
+    --accent:#45d3da; --accent-rgb:69,211,218; --accent-2:#f2a75c; --accent-2-rgb:242,167,92;
+    --code-bg:#070b15; --code-text:#dde4f4; --code-border:#1c2740;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.55);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:17px; line-height:1.7; -webkit-font-smoothing:antialiased;}
+  img,svg{max-width:100%;display:block;}
+  a{color:var(--accent); text-decoration-color:rgba(var(--accent-rgb),.35); text-underline-offset:3px;}
+  a:hover{text-decoration-color:var(--accent);}
+  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px;}
+  ::selection{background:rgba(var(--accent-rgb),.28);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:700; text-wrap:balance; color:var(--text); margin:0;}
+  p{margin:0;} ul,ol{margin:0;padding:0;}
+
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); z-index:100; transition:width .1s linear;}
+
+  .masthead{position:relative; padding:5.5rem 1.5rem 4rem; overflow:hidden; border-bottom:1px solid var(--border);
+    background: radial-gradient(circle at 15% 20%, rgba(var(--accent-rgb),.10), transparent 45%), radial-gradient(circle at 85% 0%, rgba(var(--accent-2-rgb),.08), transparent 40%);}
+  .masthead__grid{position:absolute; inset:0; opacity:.5;
+    background-image: linear-gradient(rgba(var(--accent-rgb),.08) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),.08) 1px, transparent 1px);
+    background-size:36px 36px; mask-image:radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent);}
+  .masthead__inner{position:relative; max-width:760px; margin:0 auto;}
+  .eyebrow{display:inline-flex; align-items:center; gap:.6em; font-family:var(--font-mono); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    background:rgba(var(--accent-rgb),.1); border:1px solid rgba(var(--accent-rgb),.3); padding:.35em .8em; border-radius:100px;}
+  .eyebrow b{color:var(--accent-2); font-weight:600;}
+  h1.title{margin-top:1.1rem; font-size:clamp(2.4rem, 6vw, 4rem); letter-spacing:-.01em; line-height:1.04;}
+  .cursor{display:inline-block; width:.5em; margin-left:.06em; background:var(--accent); height:.78em; transform:translateY(.06em); animation:blink 1.1s steps(1) infinite;}
+  @keyframes blink{0%,45%{opacity:1;}50%,95%{opacity:0;}100%{opacity:1;}}
+  .dek{margin-top:1.1rem; max-width:56ch; font-size:1.18rem; color:var(--text-muted); font-style:italic;}
+  .meta-row{margin-top:2rem; display:flex; flex-wrap:wrap; gap:1.6rem; font-family:var(--font-mono); font-size:.85rem; color:var(--text-faint);}
+  .meta-row span b{color:var(--text-muted); font-weight:600;}
+
+  .page-shell{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px minmax(0,1fr); gap:3.5rem; padding:3.5rem 1.5rem 6rem;}
+  @media (max-width:920px){.page-shell{grid-template-columns:1fr; padding-top:2rem;}}
+
+  nav.toc{position:sticky; top:1.75rem; align-self:start; font-family:var(--font-mono);}
+  .toc__label{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:.9rem; display:block;}
+  .toc ol{list-style:none; display:flex; flex-direction:column; gap:.15rem;}
+  .toc a{display:flex; gap:.6em; color:var(--text-muted); text-decoration:none; font-size:.86rem; padding:.4em .5em; border-radius:var(--radius-s); border-left:2px solid transparent;}
+  .toc a .n{color:var(--text-faint); flex:0 0 auto;}
+  .toc a:hover{color:var(--text); background:var(--surface-2);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(var(--accent-rgb),.08);}
+  .toc__sources{margin-top:1.1rem; padding-top:1.1rem; border-top:1px solid var(--border);}
+  .toc__sources a{font-size:.86rem; color:var(--text-faint); text-decoration:none;}
+  .toc__sources a:hover{color:var(--accent);}
+  details.toc-mobile{display:none;}
+  @media (max-width:920px){
+    nav.toc.desktop{display:none;}
+    details.toc-mobile{display:block; margin-bottom:1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m);}
+    details.toc-mobile summary{cursor:pointer; padding:.9rem 1.1rem; font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted);}
+    details.toc-mobile nav.toc{position:static; padding:0 1.1rem 1rem;}
+  }
+
+  article.content{display:flex; flex-direction:column; gap:4rem; min-width:0;}
+  .section{display:flex; flex-direction:column; gap:1.15rem; scroll-margin-top:1.5rem;}
+  .section__head{display:flex; align-items:baseline; gap:.8rem; margin-bottom:.3rem;}
+  .section__num{font-family:var(--font-mono); color:var(--accent); font-size:1rem; opacity:.75;}
+  h2{font-size:clamp(1.5rem, 3vw, 1.9rem);}
+  h3{font-size:1.2rem; margin-top:.4rem;}
+  h4{font-size:1.02rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);}
+  .section p, .section li{max-width:68ch; color:var(--text);}
+  .prose-muted{color:var(--text-muted);}
+
+  ul.plain{display:flex; flex-direction:column; gap:.5rem; padding-left:0; list-style:none;}
+  ul.plain li{position:relative; padding-left:1.3em; max-width:64ch;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--text-faint);}
+
+  code:not(.code-go, .code-bash){font-family:var(--font-mono); font-size:.88em; background:var(--surface-2); border:1px solid var(--border); padding:.1em .4em; border-radius:4px; color:var(--accent);}
+
+  .chips{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.3rem;}
+  .chip{font-family:var(--font-mono); font-size:.82rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); padding:.35em .8em; border-radius:100px;}
+
+  .spec-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-top:.4rem;}
+  @media (max-width:640px){.spec-grid{grid-template-columns:1fr;}}
+  .spec-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.3rem 1.4rem; box-shadow:var(--shadow);}
+  .spec-card h4{margin-bottom:.9rem; display:flex; align-items:center; gap:.5em;}
+  .spec-card.pro h4{color:var(--accent);}
+  .spec-card.con h4{color:var(--accent-2);}
+  .spec-card ul{display:flex; flex-direction:column; gap:.55rem; list-style:none;}
+  .spec-card li{position:relative; padding-left:1.4em; font-size:.97rem; color:var(--text-muted);}
+  .spec-card.pro li::before{content:"+"; position:absolute; left:0; color:var(--accent); font-family:var(--font-mono); font-weight:700;}
+  .spec-card.con li::before{content:"–"; position:absolute; left:0; color:var(--accent-2); font-family:var(--font-mono); font-weight:700;}
+
+  .callout{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.1rem 1.3rem; max-width:68ch; display:flex; flex-direction:column; gap:.5rem;}
+  .callout-tag{font-family:var(--font-mono); font-size:.76rem; letter-spacing:.03em; text-transform:lowercase; width:fit-content;}
+  .callout-note .callout-tag{color:var(--accent);}
+  .callout-warn .callout-tag{color:var(--accent-2);}
+  .callout p{color:var(--text-muted); font-size:.98rem;}
+  .callout strong{color:var(--text);}
+
+  .code-block{border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; box-shadow:var(--shadow); max-width:100%;}
+  .code-block__bar{display:flex; align-items:center; justify-content:space-between; background:#0f1524; border-bottom:1px solid var(--code-border); padding:.55em 1em; font-family:var(--font-mono); font-size:.76rem;}
+  .code-block__file{color:#9fb0cc;}
+  .code-block__lang{color:#5e6d8a; text-transform:uppercase; letter-spacing:.08em;}
+  pre.code-go, pre.code-bash{margin:0; padding:1.15rem 1.3rem; overflow-x:auto; background:var(--code-bg); color:var(--code-text);}
+  pre.code-go code, pre.code-bash code{font-family:var(--font-mono); font-size:.88rem; line-height:1.65; white-space:pre;}
+  .tok-c{color:#6c7fa3; font-style:italic;} .tok-s{color:#8fd694;} .tok-k{color:#f2a75c;} .tok-t{color:#45d3da;} .tok-n{color:#c9a6f7;}
+
+  .glossary{display:flex; flex-direction:column; gap:1rem; margin-top:.2rem;}
+  .glossary dt{font-family:var(--font-mono); font-size:.9rem; color:var(--accent); background:var(--surface-2); display:inline-block; padding:.15em .55em; border-radius:4px; margin-bottom:.4rem;}
+  .glossary dd{margin:0; color:var(--text-muted); max-width:64ch;}
+
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); box-shadow:var(--shadow);}
+  table.data-table{border-collapse:collapse; width:100%; min-width:480px; font-family:var(--font-mono); font-size:.87rem; background:var(--surface);}
+  table.data-table th, table.data-table td{padding:.7em 1em; text-align:left; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;}
+  table.data-table th{font-family:var(--font-display); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); background:var(--surface-2);}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tbody tr:nth-child(even){background:var(--surface-2);}
+  table.data-table td.type{color:var(--accent);}
+
+  .diagram{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1.4rem; box-shadow:var(--shadow); overflow-x:auto;}
+  .diagram-caption{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); margin-top:.7rem; text-align:center;}
+
+  .diff-list{display:flex; flex-direction:column; gap:.9rem;}
+  .diff-item{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:1rem 1.3rem; box-shadow:var(--shadow); display:flex; gap:1rem; align-items:flex-start;}
+  .diff-item .diff-num{font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:1.05rem; flex:0 0 auto; min-width:1.6em;}
+  .diff-item p{margin:0; color:var(--text-muted); font-size:.97rem; max-width:none;}
+  .diff-item strong{color:var(--text);}
+
+  footer.sources{border-top:1px solid var(--border); padding:3rem 1.5rem 5rem; max-width:1180px; margin:0 auto;}
+  footer.sources .inner{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:1.6rem;}
+  footer.sources h2{font-size:1.3rem;}
+  .source-list{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.6rem 2rem;}
+  @media (max-width:640px){.source-list{grid-template-columns:1fr;}}
+  .source-list a{display:flex; align-items:baseline; gap:.5em; color:var(--text-muted); font-size:.95rem; text-decoration:none;}
+  .source-list a:hover{color:var(--accent);}
+  .source-list a .arrow{color:var(--text-faint); font-family:var(--font-mono);}
+  .colophon{font-family:var(--font-mono); font-size:.78rem; color:var(--text-faint); text-align:center; padding-bottom:2rem;}
+</style>
+
+<div id="progress"></div>
+
+<header class="masthead">
+  <div class="masthead__grid"></div>
+  <div class="masthead__inner">
+    <span class="eyebrow">Курс Go <b>·</b> Глава 7 из 11</span>
+    <h1 class="title">Дирижёр горутин<span class="cursor" aria-hidden="true"></span></h1>
+    <p class="dek">Как <code>context.Context</code> дирижирует множеством горутин, зачем нужен graceful shutdown, и какие примитивы синхронизации и паттерны конкурентности реально работают на практике.</p>
+    <div class="meta-row">
+      <span><b>~26 мин</b> чтения</span>
+      <span><b>4</b> раздела</span>
+      <span>нужны <b>главы 1–6</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="page-shell">
+
+  <details class="toc-mobile">
+    <summary>Содержание</summary>
+    <nav class="toc" aria-label="Содержание">
+      <ol>
+        <li><a href="#context"><span class="n">01</span>Контекст</a></li>
+        <li><a href="#shutdown"><span class="n">02</span>Graceful shutdown</a></li>
+        <li><a href="#sync"><span class="n">03</span>Примитивы синхронизации</a></li>
+        <li><a href="#patterns"><span class="n">04</span>Паттерны конкурентности</a></li>
+      </ol>
+      <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+    </nav>
+  </details>
+
+  <nav class="toc desktop" aria-label="Содержание">
+    <span class="toc__label">Содержание</span>
+    <ol id="toc-list">
+      <li><a href="#context"><span class="n">01</span>Контекст</a></li>
+      <li><a href="#shutdown"><span class="n">02</span>Graceful shutdown</a></li>
+      <li><a href="#sync"><span class="n">03</span>Примитивы синхронизации</a></li>
+      <li><a href="#patterns"><span class="n">04</span>Паттерны конкурентности</a></li>
+    </ol>
+    <div class="toc__sources"><a href="#sources">Источники ↓</a></div>
+  </nav>
+
+  <article class="content">
+
+    <!-- 01 Контекст -->
+    <section class="section" id="context">
+      <div class="section__head"><span class="section__num">01</span><h2>Контекст</h2></div>
+      <p><strong>Контекст</strong> помогает дирижировать программой, у которой горутин много. О нём можно думать на трёх уровнях: бытовом — как об окружении, задающем точный смысл происходящего; практическом — как о типе данных, управляющем жизненным циклом горутин (а значит, и всей программы); и техническом — это просто <a href="https://github.com/golang/go/blob/go1.25.7/src/context/context.go#L71">интерфейс</a>, которому может удовлетворять любой тип.</p>
+      <p>Контекст умеет три важные вещи: передавать сигнал отмены между горутинами, управлять дедлайнами выполнения кода и нести метаданные сквозь слои кодовой базы. Без него не получилось бы аккуратно передавать метаданные при HTTP/gRPC-запросах, контролировать время ответа сервисов и БД, не терять ресурсы на зависших фоновых задачах.</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">context.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Context interface {
+	Deadline() (deadline time.Time, ok bool)
+	Done() <-chan struct{}
+	Err() error
+	Value(key interface{}) interface{}
+}</code></pre>
+      </div>
+      <dl class="glossary">
+        <div><dt>Deadline()</dt><dd>время, к которому контекст должен быть отменён, и флаг — установлен ли дедлайн вообще.</dd></div>
+        <div><dt>Done()</dt><dd>канал, закрывающийся в момент отмены контекста.</dd></div>
+        <div><dt>Err()</dt><dd>причина отмены как ошибка.</dd></div>
+        <div><dt>Value(key)</dt><dd>значение из контекста по ключу.</dd></div>
+      </dl>
+
+      <h3>Типы контекста</h3>
+      <p class="prose-muted">Пакет <code>context</code> даёт готовые конструкторы для создания контекстов на лету:</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Конструктор</th><th>Что делает</th></tr></thead>
+          <tbody>
+            <tr><td class="type">context.Background()</td><td>пустой контекст — стартовая точка для любой цепочки</td></tr>
+            <tr><td class="type">context.TODO()</td><td>тоже пустой, но заглушка на время, пока не решено, нужен ли контекст вообще</td></tr>
+            <tr><td class="type">context.WithCancel(ctx)</td><td>контекст + функция ручной отмены — закрывает Done() по вызову</td></tr>
+            <tr><td class="type">context.WithTimeout(ctx, d)</td><td>закрывается сам по истечении d, либо раньше через cancel</td></tr>
+            <tr><td class="type">context.WithDeadline(ctx, t)</td><td>закрывается по достижении конкретного момента времени t</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// правило №1</span>
+        <p><code>Background</code> — начальная точка для целых цепочек контекстов. <code>TODO</code> в продакшене <strong>не используется никогда</strong> — это заглушка для мест, куда позже подставится настоящий контекст.</p>
+      </div>
+      <p class="prose-muted"><code>WithTimeout</code> под капотом обращается к <code>WithDeadline</code> (<a href="https://github.com/golang/go/blob/go1.25.7/src/context/context.go#L703">исходник</a>) — приятный пример переиспользования кода. Ещё есть <code>context.AfterFunc(ctx, func(){...})</code>, выполняющая замыкание после завершения контекста, и методы с постфиксом <code>Cause</code>, позволяющие приложить бизнес-причину отмены:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>ctx, cancel := context.WithCancelCause(context.Background())
+
+go func() {
+	time.Sleep(200 * time.Millisecond)
+	cancel(errors.New("client closed browser tab"))
+}()
+
+<-ctx.Done()
+fmt.Println("Err:", ctx.Err())            // context canceled
+fmt.Println("Cause:", context.Cause(ctx)) // client closed browser tab</code></pre>
+      </div>
+
+      <h3>Иерархии контекстов</h3>
+      <p>Из контекстов строятся целые цепочки — большинство конструкторов сами принимают контекст и оборачивают его:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>ctx := context.Background()
+ctx, cancel = context.WithCancel(ctx)
+ctx, cancel = context.WithTimeout(ctx, 5*time.Second)</code></pre>
+      </div>
+      <p class="prose-muted">Переменная переиспользуется потому, что под капотом это структуры-обёртки, каждая из которых хранит внутри себя интерфейс <code>Context</code> — а значит, может обернуть любую кастомную реализацию.</p>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart TB
+  BG["Background"] --> WC["WithCancel"] --> WT["WithTimeout"] --> WV["WithValue"]
+  WV -.->|"отмена течёт только вниз по цепочке"| BLOCKED["отмена дочернего
+НЕ отменяет родителя"]
+        </pre>
+        <p class="diagram-caption">Отмена родителя отменяет всех детей; отмена ребёнка родителя не касается</p>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// правило №2</span>
+        <p>Отменился родительский контекст — отменяются и дочерние. Отменился дочерний — родительский живёт дальше. Исключение — <code>context.WithoutCancel(ctx)</code>: возвращает дочерний контекст, независимый от отмены родителя. Пригождается, когда операция обязана довыполниться, что бы ни случилось выше по цепочке.</p>
+      </div>
+
+      <h3>Передача значений в контексте</h3>
+      <p>Контекст умеет быть контейнером для передачи данных между слоями — метаданных, авторизации и прочего сопровождения запроса:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>ctx := context.WithValue(ctx, key, value)</code></pre>
+      </div>
+      <p class="prose-muted">И ключ, и значение — пустой интерфейс; под капотом (<a href="https://github.com/golang/go/blob/go1.25.7/src/context/context.go#L742">исходник</a>) это снова структура в структуре, вложенная иерархия по ключам.</p>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// никогда не делай так</span>
+        <p><strong>Параметры бизнес-логики через контекст передавать нельзя.</strong> Причин три:</p>
+      </div>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p><strong>Неявный контракт.</strong> Знает ли принимающая сторона, что важные данные лежат в контексте? А если знает — точно ли они там окажутся?</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p><strong>Производительность поиска.</strong> Вложенные контексты ищутся по цепочке за O(n) — в худшем случае обход всей иерархии.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p><strong>Стоимость приведения типа.</strong> <code>ctx.Value</code> отдаёт <code>any</code>, а значит, каждый раз нужен type assertion — и нет гарантии, что тип совпадёт.</p></div>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>if id, ok := ctx.Value(requestIDKey).(string); ok {
+	fmt.Println(id)
+} else {
+	log.Fatal("fatal!!!")
+}</code></pre>
+      </div>
+      <p class="prose-muted">Если метаданные всё же нужно передать — заводи ключ кастомным типом-константой, чтобы случайно не столкнуться с чужим ключом:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type contextKey string // кастомный тип ключа на основе строк
+
+const userIDKey contextKey = "userID"
+
+ctx := context.WithValue(context.Background(), userIDKey, 123)</code></pre>
+      </div>
+
+      <h3>Работа с контекстом</h3>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func worker(ctx context.Context, id int) {
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Printf("Worker %d: остановка, причина: %v\n", id, ctx.Err())
+			return
+		default:
+			fmt.Printf("Worker %d: работает...\n", id)
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	for i := 1; i <= 3; i++ {
+		go worker(ctx, i)
+	}
+
+	time.Sleep(2 * time.Second)
+
+	fmt.Println("main: отправляем сигнал отмены...")
+	cancel()
+
+	time.Sleep(1 * time.Second)
+	fmt.Println("main: программа завершена")
+}</code></pre>
+      </div>
+      <p class="prose-muted">Три воркера крутятся в бесконечном цикле, слушая <code>Done()</code> через неблокирующий <code>select</code> с <code>default</code>. Как только <code>main</code> вызывает <code>cancel()</code>, все три получают сигнал и корректно завершаются.</p>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// всегда</span>
+        <p>Для контекстов с отменой функцию <code>cancel</code> нужно вызывать всегда — обычно через <code>defer</code>, иначе рискуешь получить утечку памяти и горутин:</p>
+        <pre class="code-go" style="background:transparent;padding:0;margin-top:.3rem;"><code>ctx, cancel := context.WithCancel(context.Background())
+defer cancel()</code></pre>
+      </div>
+      <p class="prose-muted">Ошибки из пакета <code>context</code> тоже можно проверять явно:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>if err := ctx.Err(); err != nil {
+	if errors.Is(err, context.Canceled) {
+		// ...
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		// ...
+	}
+}</code></pre>
+      </div>
+
+      <h3>Идиоматика при работе с контекстом</h3>
+      <div class="diff-list">
+        <div class="diff-item"><span class="diff-num">1</span><p>Контекст — всегда первый параметр функции: сразу видно, что она умеет в отмену или тайм-аут.</p></div>
+        <div class="diff-item"><span class="diff-num">2</span><p>Контекст не хранят в структурах — он не имеет отношения к их жизненному циклу.</p></div>
+        <div class="diff-item"><span class="diff-num">3</span><p>В долгих операциях контекст проверяют через <code>Done()</code> в неблокирующем <code>select</code>.</p></div>
+        <div class="diff-item"><span class="diff-num">4</span><p>Следи за тайм-аутами: дочерний контекст с тайм-аутом больше родительского может повести себя неожиданно.</p></div>
+        <div class="diff-item"><span class="diff-num">5</span><p><code>context.TODO</code> в рабочем коде не нужен — он ничего не делает и лишь отвлекает от сути.</p></div>
+        <div class="diff-item"><span class="diff-num">6</span><p><code>context.Background</code> создаётся только на самом верхнем уровне — не обрывай цепочку контекстов новым Background посередине.</p></div>
+      </div>
+    </section>
+
+    <!-- 02 Graceful shutdown -->
+    <section class="section" id="shutdown">
+      <div class="section__head"><span class="section__num">02</span><h2>Graceful shutdown</h2></div>
+      <p>Ctrl+C обрывает программу мгновенно. Но что, если перед выходом нужно закрыть соединения с БД или дописать на диск незавершённые вычисления? Для этого — <strong>graceful shutdown</strong>: способность приложения корректно завершиться, сохранив целостность данных и не оборвав критические операции на середине.</p>
+      <p class="prose-muted">ОС, Docker и Kubernetes общаются с программой через <em>сигналы</em>. В Go их слушают через пакет <code>os/signal</code>:</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Сигнал</th><th>Номер</th><th>Смысл</th></tr></thead>
+          <tbody>
+            <tr><td class="type">SIGINT</td><td>2</td><td>прерывание, обычно Ctrl+C</td></tr>
+            <tr><td class="type">SIGTERM</td><td>15</td><td>«вежливый» запрос на завершение — время на уборку есть</td></tr>
+            <tr><td class="type">SIGKILL</td><td>9</td><td>принудительное завершение — не перехватывается, крайняя мера</td></tr>
+            <tr><td class="type">SIGHUP</td><td>1</td><td>исторически «обрыв терминала», сегодня чаще — перезагрузка конфига</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	// Буферизированный — чтобы отправка сигнала не заблокировалась
+	sigChan := make(chan os.Signal, 1)
+
+	signal.Notify(sigChan,
+		syscall.SIGINT,  // Ctrl+C
+		syscall.SIGTERM, // Сигнал завершения от системы/Kubernetes
+		syscall.SIGHUP,  // Сигнал перезапуска конфигурации
+	)
+
+	fmt.Println("Приложение запущено. Ожидаю сигналы...")
+
+	go func() {
+		for i := 1; i <= 10; i++ {
+			fmt.Printf("Выполняю работу %d/10...\n", i)
+			time.Sleep(2 * time.Second)
+		}
+	}()
+
+	sig := <-sigChan // Блокируемся до получения сигнала
+	log.Printf("Получен сигнал: %v (%v)\n", sig, sig)
+}</code></pre>
+      </div>
+      <p class="prose-muted">А вот так это выглядит для настоящего HTTP-сервера (о самом HTTP — в следующей главе, здесь важен именно паттерн):</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func gracefulServer() {
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: createRouter(),
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("Ошибка сервера: %v", err)
+		}
+	}()
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	<-sig
+
+	log.Println("Получен сигнал завершения, начинаем graceful shutdown...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("Ошибка при shutdown: %v", err)
+		server.Close() // Вынужденное завершение
+	}
+
+	log.Println("Сервер корректно завершён")
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- 03 Примитивы синхронизации -->
+    <section class="section" id="sync">
+      <div class="section__head"><span class="section__num">03</span><h2>Примитивы синхронизации</h2></div>
+      <p>Каналы, уже знакомые тебе, — не единственный <strong>примитив синхронизации</strong>: низкоуровневый инструмент, который защищает общие ресурсы от гонок при конкурентном доступе. Остальные живут в пакетах <a href="https://github.com/golang/go/tree/go1.25.7/src/sync"><code>sync</code></a> и <a href="https://github.com/golang/go/tree/go1.25.7/src/sync/atomic"><code>atomic</code></a>.</p>
+
+      <h3>Атомики</h3>
+      <p>Максимально низкоуровневый примитив — обёртка прямо над ассемблером (<a href="https://github.com/golang/go/blob/go1.25.7/src/sync/atomic/asm.s">исходник</a>). Атомарная операция гарантированно не прерывается и синхронизируется на уровне инструкций процессора — доступ к переменной гарантированно эксклюзивен в момент операции. Чаще всего это потокобезопасный счётчик:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	var v int64 = 0
+
+	go atomic.AddInt64(&v, 1)
+	go atomic.AddInt64(&v, -2)
+
+	time.Sleep(1 * time.Second)
+
+	val := atomic.LoadInt64(&v)
+	fmt.Println(val)
+}</code></pre>
+      </div>
+      <p class="prose-muted">Без гарантии порядка выполнения этих двух горутин мы всё равно гарантированно получаем корректный, непротиворечивый результат.</p>
+
+      <h3>Мьютексы</h3>
+      <p>Мьютекс защищает блок кода от неконсистентного состояния при доступе из нескольких горутин — например, когда одна горутина пишет в мапу, а другая в этот же момент её меняет. В исходниках это тоже <a href="https://github.com/golang/go/blob/go1.25.7/src/sync/mutex.go#L30">структура</a>:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func exampleOne() {
+	mu := sync.Mutex{}
+
+	mu.Lock()
+	fmt.Println("Mutex locked")
+	mu.Unlock()
+}</code></pre>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-tag">// идиоматическая договорённость</span>
+        <p>Поле с мьютексом принято располагать прямо над тем, что оно защищает — чисто визуальное соглашение, но оно того стоит:</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type Cache struct {
+	mu sync.Mutex // Мьютекс защищает мапу ниже
+	m  map[int]int
+
+	sl []int // Слайс — вне защиты мьютекса
+}
+
+func (c *Cache) Add(key int, val int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.m[key] = val
+}</code></pre>
+      </div>
+      <p class="prose-muted"><code>defer</code> здесь почти всегда к месту — гарантирует разблокировку при любом сценарии выхода из функции.</p>
+
+      <p>У обычного мьютекса есть родственник — <a href="https://github.com/golang/go/blob/go1.25.7/src/sync/rwmutex.go#L39"><code>RWMutex</code></a>, с методами <code>RLock</code>/<code>RUnlock</code>:</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th></th><th>Mutex</th><th>RWMutex</th></tr></thead>
+          <tbody>
+            <tr><td>Блокирует чтение</td><td>да, всегда</td><td>только если идёт запись</td></tr>
+            <tr><td>Блокирует запись</td><td>да, всегда</td><td>да, всегда — блокирует и читателей тоже</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose-muted">RWMutex стоит предпочесть, когда чтений заметно больше, чем записей.</p>
+
+      <h3>WaitGroup</h3>
+      <p>Позволяет дождаться завершения заранее известного числа горутин. Внутри — тоже структура, реализованная поверх атомиков (<a href="https://github.com/golang/go/blob/go1.25.7/src/sync/waitgroup.go#L48">исходник</a>), а методов у неё всего три:</p>
+      <dl class="glossary">
+        <div><dt>Add(n)</dt><dd>увеличивает счётчик ожидаемых горутин.</dd></div>
+        <div><dt>Done()</dt><dd>декрементирует счётчик по завершении одной горутины.</dd></div>
+        <div><dt>Wait()</dt><dd>блокирует выполнение, пока счётчик не дойдёт до нуля.</dd></div>
+      </dl>
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  A["wg.Add(n)"] --> B["запускаем n горутин"]
+  B --> C["каждая по завершении:
+defer wg.Done()"]
+  C --> D{"счётчик == 0?"}
+  D -- нет --> C
+  D -- да --> E["wg.Wait() разблокируется"]
+        </pre>
+        <p class="diagram-caption">Add задаёт счётчик, Done его уменьшает, Wait блокируется до нуля</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func main() {
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+
+	for range 2 {
+		go func() {
+			defer wg.Done()
+			fmt.Println("Hello World")
+		}()
+	}
+
+	wg.Wait()
+}</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <span class="callout-tag">// осторожно</span>
+        <p>Запускай ровно столько горутин, сколько указано в <code>Add</code> — иначе рискуешь поймать deadlock. И держи в уме: обработка ошибок с голым WaitGroup превращается в отдельную головную боль — для этого есть <a href="https://pkg.go.dev/golang.org/x/sync/errgroup"><code>errgroup</code></a>, который заодно и ошибки собирает, и горутины корректно завершает.</p>
+      </div>
+
+      <h3>Once</h3>
+      <p>Структура с методом <code>Do</code>, гарантирующая, что функция выполнится <strong>только один раз</strong> — первой добравшейся до неё горутиной, остальные вызовы просто ничего не делают:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>var once sync.Once
+
+func initialize() {
+	fmt.Println("Инициализация ресурсов (выполняется один раз)...")
+}
+
+func main() {
+	var wg sync.WaitGroup
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+
+			once.Do(initialize)
+			fmt.Printf("Горутина %d завершила работу\n", id)
+		}(i)
+	}
+
+	wg.Wait()
+	fmt.Println("Программа завершена.")
+}</code></pre>
+      </div>
+
+      <h3>sync.Map</h3>
+      <p class="prose-muted">Потокобезопасная мапа из коробки (<a href="https://github.com/golang/go/blob/go1.25.7/src/sync/map.go#L40">исходник</a>) — под капотом мьютекс плюс две обычные мапы: для актуальных и изменённых данных. Но она заметно медленнее и неуклюжее ручной связки «мапа + мьютекс» — профит появляется только при куче свободных ядер и подавляющей доле операций чтения.</p>
+
+      <h3>Прочие примитивы</h3>
+      <p class="prose-muted">Используются заметно реже, но стоит знать об их существовании — стоит изучить самостоятельно:</p>
+      <div class="chips">
+        <span class="chip">sync.Cond</span>
+        <span class="chip">sync.OnceFunc</span>
+        <span class="chip">sync.Pool</span>
+        <span class="chip">poolqueue (внутренний)</span>
+      </div>
+    </section>
+
+    <!-- 04 Паттерны -->
+    <section class="section" id="patterns">
+      <div class="section__head"><span class="section__num">04</span><h2>Паттерны конкурентности</h2></div>
+      <p>У многопоточного стиля программирования, как и у любого другого, есть свой набор устоявшихся классов задач и обобщённых решений — паттернов.</p>
+
+      <h3>Singleflight</h3>
+      <p>Группирует одновременные запросы к одной и той же долгой операции: появляется «лидер», который реально её выполняет, и пул ожидающих — как только лидер завершается, результат достаётся всем сразу. Это экономит ресурсы сервера при всплеске одинаковых запросов во время долгих вычислений. Реализован в расширенной стандартной библиотеке — <a href="https://pkg.go.dev/golang.org/x/sync/singleflight"><code>golang.org/x/sync/singleflight</code></a>.</p>
+      <div class="callout callout-note">
+        <span class="callout-tag">// как устроено</span>
+        <p><code>call</code> хранит результат и канал <code>done</code>, закрывающийся по завершении. Мьютекс здесь разблокируется дважды подряд вручную, а не через <code>defer</code>: единственный <code>defer Unlock</code> держал бы блокировку всё время, пока выполняется сама операция — а этого делать нельзя, она может быть долгой.</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">singleflight.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>type call struct {
+	err   error
+	value any
+	done  chan struct{}
+}
+
+type SingleFlight struct {
+	mutex sync.Mutex
+	calls map[string]*call
+}
+
+func NewSingleFlight() *SingleFlight {
+	return &SingleFlight{calls: make(map[string]*call)}
+}
+
+func (s *SingleFlight) Do(ctx context.Context, key string, action func(context.Context) (any, error)) (any, error) {
+	s.mutex.Lock()
+	if call, found := s.calls[key]; found {
+		s.mutex.Unlock()
+		return s.wait(ctx, call) // Вызов уже идёт — просто встаём в очередь на результат
+	}
+
+	call := &call{done: make(chan struct{})}
+	s.calls[key] = call
+	s.mutex.Unlock()
+
+	go func() {
+		defer func() {
+			if v := recover(); v != nil {
+				call.err = errors.New("error from single flight")
+			}
+			close(call.done)
+
+			s.mutex.Lock()
+			delete(s.calls, key)
+			s.mutex.Unlock()
+		}()
+
+		call.value, call.err = action(ctx)
+	}()
+
+	return s.wait(ctx, call)
+}
+
+func (s *SingleFlight) wait(ctx context.Context, call *call) (any, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-call.done:
+		return call.value, call.err
+	}
+}</code></pre>
+      </div>
+
+      <h3>Генератор</h3>
+      <p class="prose-muted">Порождает данные и владеет полным жизненным циклом канала, в который их пишет — включая закрытие:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func generator() <-chan int {
+	ch := make(chan int)
+
+	go func() {
+		for i := range 10 {
+			ch <- i + 1
+		}
+		close(ch)
+	}()
+
+	return ch
+}</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  I1["input1"] --> CH["ch"]
+  I2["input2"] --> CH
+  CH --> OUT["один общий поток"]
+        </pre>
+        <p class="diagram-caption">Fan-in: несколько источников сливаются в один канал</p>
+      </div>
+      <h3>Fan-in</h3>
+      <p class="prose-muted">Собирает данные из нескольких каналов в один — удобно, когда результаты нескольких горутин нужно свести в одной точке:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func fanIn(input1, input2 <-chan string) <-chan string {
+	ch := make(chan string)
+
+	go func() {
+		for {
+			select {
+			case s := <-input1:
+				ch <- s
+			case s := <-input2:
+				ch <- s
+			}
+		}
+	}()
+
+	return ch
+}</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  CH["ch"] --> W1["worker 1"]
+  CH --> W2["worker 2"]
+  CH --> W3["worker 3"]
+        </pre>
+        <p class="diagram-caption">Fan-out: один источник раздаёт работу нескольким получателям</p>
+      </div>
+      <h3>Fan-out</h3>
+      <p class="prose-muted">Делает обратное — распределяет данные одного канала между несколькими воркерами. Хорошо сочетается с генератором:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func worker(ch <-chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for v := range ch {
+		fmt.Println(v)
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func sender() {
+	ch := make(chan int)
+	var wg sync.WaitGroup
+
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go worker(ch, &wg)
+	}
+
+	for i := range 10 {
+		ch <- i
+	}
+
+	close(ch)
+	wg.Wait()
+	fmt.Println("done")
+}</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  P["producer"] --> S1["stage 1
+×2"] --> S2["stage 2
+consumer"]
+        </pre>
+        <p class="diagram-caption">Pipeline: каждая стадия — отдельная горутина со своим каналом на входе и выходе</p>
+      </div>
+      <h3>Pipeline</h3>
+      <p class="prose-muted">Выстраивает конвейер обработки — например, последовательную трансформацию потока данных или файлов:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func producer() <-chan int {
+	c := make(chan int)
+
+	go func() {
+		for i := range 10 {
+			c <- i + 1
+		}
+		close(c)
+	}()
+
+	return c
+}
+
+func producerConsumer(c <-chan int) <-chan int {
+	out := make(chan int)
+
+	go func() {
+		for v := range c {
+			out <- v * 2
+		}
+		close(out)
+	}()
+
+	return out
+}
+
+func consumer(ch <-chan int) {
+	for v := range ch {
+		fmt.Println(v)
+	}
+}</code></pre>
+      </div>
+
+      <div class="diagram">
+        <pre class="mermaid">
+flowchart LR
+  J["jobs"] --> W1["worker 1"] --> R["results"]
+  J --> W2["worker 2"] --> R
+  J --> W3["worker 3"] --> R
+        </pre>
+        <p class="diagram-caption">Worker pool: фиксированный пул воркеров разбирает общую очередь задач</p>
+      </div>
+      <h3>Worker pool</h3>
+      <p class="prose-muted">Организует параллельную обработку однотипной работы фиксированным числом воркеров — типичный выбор для больших объёмов однородных данных:</p>
+      <div class="code-block">
+        <div class="code-block__bar"><span class="code-block__file">main.go</span><span class="code-block__lang">go</span></div>
+        <pre class="code-go"><code>func worker(jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for j := range jobs {
+		time.Sleep(1 * time.Second)
+		fmt.Println("job", j)
+		results <- j * j
+	}
+}
+
+func main() {
+	jobs := make(chan int)
+	results := make(chan int)
+
+	var wg sync.WaitGroup
+
+	for i := range 3 {
+		wg.Add(1)
+		go worker(jobs, results, &wg)
+	}
+
+	go func() {
+		for i := range 10 {
+			jobs <- i
+		}
+		close(jobs)
+	}()
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	for result := range results {
+		fmt.Println(result)
+	}
+}</code></pre>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer class="sources" id="sources">
+  <div class="inner">
+    <h2>Источники</h2>
+    <ul class="source-list">
+      <li><a href="https://habr.com/ru/companies/pt/articles/764850/"><span class="arrow">↗</span>«Пакет context: взгляд профессионала»</a></li>
+      <li><a href="https://habr.com/ru/articles/827544/"><span class="arrow">↗</span>«Контекст изнутри»</a></li>
+      <li><a href="https://go.dev/blog/context-and-structs"><span class="arrow">↗</span>Context and structs</a></li>
+      <li><a href="https://habr.com/ru/articles/744822/"><span class="arrow">↗</span>«Атомики в Go»</a></li>
+      <li><a href="https://blogtitle.github.io/go-advanced-concurrency-patterns-part-1/"><span class="arrow">↗</span>Go advanced concurrency patterns: part 1</a></li>
+      <li><a href="https://blogtitle.github.io/go-advanced-concurrency-patterns-part-2-timers/"><span class="arrow">↗</span>Go advanced concurrency patterns: part 2</a></li>
+      <li><a href="https://habr.com/ru/articles/338718/"><span class="arrow">↗</span>«Разбираемся с новым sync.Map»</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-sync-map/index.html"><span class="arrow">↗</span>Go sync.Map: The Right Tool for the Right Job</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-sync-mutex/index.html"><span class="arrow">↗</span>Go sync.Mutex: Normal and Starvation Mode</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-sync-waitgroup/index.html"><span class="arrow">↗</span>Go sync.WaitGroup and The Alignment Problem</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-sync-pool/index.html"><span class="arrow">↗</span>Go sync.Pool and the Mechanics Behind It</a></li>
+      <li><a href="https://victoriametrics.com/blog/go-sync-cond/"><span class="arrow">↗</span>Go sync.Cond, the Most Overlooked Sync Mechanism</a></li>
+      <li><a href="https://kovardin.ru/articles/go/singlton-pattern-na-go/"><span class="arrow">↗</span>«Синглтон паттерн на Go»</a></li>
+    </ul>
+  </div>
+</footer>
+<p class="colophon">Глава 7 из 11 · Курс «Go»</p>
+
+<script>
+(function(){
+  "use strict";
+  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  var KEYWORDS = "package|import|func|var|const|if|else|switch|case|default|break|continue|fallthrough|for|range|return|struct|interface|type|map|chan|go|defer|select|true|false|nil";
+  var TYPES = "int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|float32|float64|bool|string|byte|rune|error|any";
+  var TOKEN_RE = new RegExp(
+    ["(//.*$)","(/\\*[\\s\\S]*?\\*/)",'("(?:[^"\\\\]|\\\\.)*")',"('(?:[^'\\\\]|\\\\.)*')",
+     "\\b(" + KEYWORDS + ")\\b","\\b(" + TYPES + ")\\b","\\b(\\d+\\.?\\d*)\\b"].join("|"),
+    "gm"
+  );
+  function highlightGo(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(TOKEN_RE, function(m,c1,c2,str,ch,kw,ty,num){
+      if (c1!==undefined || c2!==undefined) return '<span class="tok-c">'+m+'</span>';
+      if (str!==undefined || ch!==undefined) return '<span class="tok-s">'+m+'</span>';
+      if (kw!==undefined) return '<span class="tok-k">'+m+'</span>';
+      if (ty!==undefined) return '<span class="tok-t">'+m+'</span>';
+      if (num!==undefined) return '<span class="tok-n">'+m+'</span>';
+      return m;
+    });
+  }
+  function highlightComments(src){
+    var escaped = escapeHtml(src);
+    return escaped.replace(/(\/\/.*$|#.*$)/gm, '<span class="tok-c">$1</span>');
+  }
+  document.querySelectorAll("pre.code-go code").forEach(function(el){ el.innerHTML = highlightGo(el.textContent); });
+  document.querySelectorAll("pre.code-bash code").forEach(function(el){ el.innerHTML = highlightComments(el.textContent); });
+
+  var bar = document.getElementById("progress");
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrollTop = h.scrollTop || document.body.scrollTop;
+    var max = (h.scrollHeight || document.body.scrollHeight) - h.clientHeight;
+    var pct = max > 0 ? (scrollTop / max) * 100 : 0;
+    bar.style.width = pct + "%";
+  }
+  document.addEventListener("scroll", updateProgress, {passive:true});
+  updateProgress();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = links.map(function(l){ return document.querySelector(l.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var id = entry.target.id;
+        var allLinksForId = document.querySelectorAll('.toc a[href="#'+id+'"]');
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove("active"); });
+          allLinksForId.forEach(function(l){ l.classList.add("active"); });
+        }
+      });
+    }, {rootMargin:"-15% 0px -70% 0px", threshold:0});
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+})();
+</script>
