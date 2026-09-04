@@ -6,17 +6,17 @@ Go lecture notes and code exercises from the Central University backend course. 
 
 | # | Topic |
 |---|-------|
-| 1 | [Introduction to Go — history, philosophy, toolchain](Longreads/Longread_1.md) |
-| 2 | [Composite types — arrays, slices, maps, reading Go source code](Longreads/Longread_2.md) |
-| 3 | [Functions, structs, methods, interfaces](Longreads/Longread_3.md) |
-| 4 | [Generics, error handling, panics](Longreads/Longread_4.md) |
-| 5 | [Project structure — packages, modules, dependencies, architecture patterns](Longreads/Longread_5.md) |
-| 6 | [Concurrency and parallelism — goroutines, the Go scheduler](Longreads/Longread_6.md) |
-| 7 | [Context and sync primitives — `sync`, `WaitGroup`, `Mutex`, concurrency patterns](Longreads/Longread_7.md) |
-| 8 | [File I/O operations](Longreads/Longread_8.md) |
-| 9 | [Go tooling and codebase practices — linters, formatting, code quality](Longreads/Longread_9.md) |
-| 10 | [Config files — JSON and YAML parsing](Longreads/Longread_10.md) |
-| 11 | [HTTP and REST — building HTTP services in Go](Longreads/Longread_11.md) |
+| 1 | [Introduction to Go — history, philosophy, toolchain](Longreads/Longread_1.html) |
+| 2 | [Composite types — arrays, slices, maps, reading Go source code](Longreads/Longread_2.html) |
+| 3 | [Functions, structs, methods, interfaces](Longreads/Longread_3.html) |
+| 4 | [Generics, error handling, panics](Longreads/Longread_4.html) |
+| 5 | [Project structure — packages, modules, dependencies, architecture patterns](Longreads/Longread_5.html) |
+| 6 | [Concurrency and parallelism — goroutines, the Go scheduler](Longreads/Longread_6.html) |
+| 7 | [Context and sync primitives — `sync`, `WaitGroup`, `Mutex`, concurrency patterns](Longreads/Longread_7.html) |
+| 8 | [File I/O operations](Longreads/Longread_8.html) |
+| 9 | [Go tooling and codebase practices — linters, formatting, code quality](Longreads/Longread_9.html) |
+| 10 | [Config files — JSON and YAML parsing](Longreads/Longread_10.html) |
+| 11 | [HTTP and REST — building HTTP services in Go](Longreads/Longread_11.html) |
 
 ## A Tour of Go — code exercises
 
